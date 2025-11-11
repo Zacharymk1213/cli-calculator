@@ -1,4 +1,4 @@
-# c-tools
+# cli-calculator
 
 Simple C++ project providing two command-line tools:
 
