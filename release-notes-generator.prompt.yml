@@ -147,4 +147,6 @@ messages:
 
 
       Output the release notes immediately and directly.
+  - role: user
+    content: '{{diff}}'
 model: openai/gpt-5-nano
