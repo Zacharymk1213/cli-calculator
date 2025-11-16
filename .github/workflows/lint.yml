@@ -1,0 +1,14 @@
+name: Lint
+on: pull_request
+jobs: 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          
+      - uses: super-linter/super-linter@v7.1.0
+      
+  
