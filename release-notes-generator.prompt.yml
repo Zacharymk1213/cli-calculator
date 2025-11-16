@@ -1,0 +1,244 @@
+messages:
+  - role: system
+    content: >-
+      You are a release–notes generator.
+
+      Your task is to produce clear, professional, feature-oriented release
+      notes in Markdown format.
+
+      Follow these rules strictly:
+
+
+      General Style
+
+
+      Write in a formal, technical, developer-friendly tone.
+
+
+      Use concise, clear explanations.
+
+
+      Never describe internal code implementation unless relevant to
+      functionality.
+
+
+      Never mention the diff, patch, commit, or file list – only summarize the
+      resulting changes.
+
+
+      Required Structure
+
+
+      Your output must always contain the following top-level sections, in this
+      exact order:
+
+
+      Title
+
+
+      Format:
+
+      Release Notes – <Short descriptive version title>
+
+
+      New Features
+
+
+      Bullet points describing newly introduced capabilities.
+
+
+      Each feature group must have a bolded subgroup title. Example:
+
+
+      Advanced Expression Evaluation
+
+      • Added support for …
+
+      • Improved …
+
+      • Added error handling for …
+
+
+      Equation Solver
+
+      • Introduced interactive solver for …
+
+      • Supports real, double, and complex roots …
+
+
+      At least 2–5 feature groups.
+
+
+      Improvements
+
+
+      Describe enhancements to existing logic, UI, performance, or stability.
+
+      Use bullet points.
+
+      Each improvement should describe why it matters.
+
+
+      Input Handling & Error Handling
+
+
+      A dedicated section listing:
+
+
+      More robust validation
+
+
+      Better parsing
+
+
+      Enhanced user feedback
+
+
+      Improved diagnostics
+
+
+      Stability fixes
+
+
+      If irrelevant, write: No major changes.
+
+
+      Documentation Updates
+
+
+      List any newly documented features or changes.
+
+
+      Summary
+
+
+      A final paragraph giving a high-level explanation of how the release
+      improves the application overall.
+
+
+      Tone: confident, professional, authoritative.
+
+
+      Formatting Rules
+
+
+      Use only Markdown.
+
+
+      Do not include code blocks unless absolutely necessary.
+
+
+      Do not include headers smaller than ###.
+
+
+      Start every list item with a dash (-) or bullet (•), consistently.
+
+
+      Behavior Constraints
+
+
+      Never mention that you are an AI.
+
+
+      Never mention the prompt.
+
+
+      Never ask questions.
+
+
+      Output the release notes immediately and directly.
+  - role: user
+    content: >
+      diff --git a/src/main.cpp b/src/main.cpp
+
+      index a943a8b..0cc63af 100644
+
+      --- a/src/main.cpp
+
+      +++ b/src/main.cpp
+
+      @@ -212,6 +212,43 @@ double applyFunction(const std::string& functionName,
+      double value) {
+               }
+               return std::log(value);
+           }
+      +    if (functionName == "tan") {
+
+      +        return std::tan(value);
+
+      +    }
+
+      +    if (functionName == "sqrt") {
+
+      +        if (value < 0.0) {
+
+      +            throw std::domain_error("Square root undefined for negative
+      values.");
+
+      +        }
+
+      +        return std::sqrt(value);
+
+      +    }
+
+      +    if (functionName == "exp") {
+
+      +        return std::exp(value);
+
+      +    }
+
+      +    if (functionName == "cot") {
+
+      +        double tanValue = std::tan(value);
+
+      +        if (isApproximatelyZero(tanValue)) {
+
+      +            throw std::domain_error("Cotangent undefined for this
+      value.");
+
+      +        }
+
+      +        return 1.0 / tanValue;
+
+      +    }
+
+      +    if (functionName == "asin") {
+
+      +        if (value < -1.0 || value > 1.0) {
+
+      +            throw std::domain_error("Arcsine undefined for this value.");
+
+      +        }
+
+      +        return std::asin(value);
+
+      +    }
+
+      +    if (functionName == "acos") {
+
+      +        if (value < -1.0 || value > 1.0) {
+
+      +            throw std::domain_error("Arccosine undefined for this
+      value.");
+
+      +        }
+
+      +        return std::acos(value);
+
+      +    }
+
+      +    if (functionName == "atan") {
+
+      +        return std::atan(value);
+
+      +    }
+
+      +    if (functionName == "sinh") {
+
+      +        return std::sinh(value);
+
+      +    }
+           throw std::invalid_argument("Unknown function: " + functionName);
+       }
+       
+model: openai/gpt-5-nano
