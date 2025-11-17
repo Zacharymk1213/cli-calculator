@@ -5,8 +5,6 @@
 [![pages-build-deployment](https://github.com/Benedek553/cli-calculator/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/Benedek553/cli-calculator/actions/workflows/pages/pages-build-deployment)
 # cli-calculator
 
-[![Get it from the Snap Store](https://snapcraft.io/en/light/install.svg)](https://snapcraft.io/cli-calculator)
-
 Simple C++ project providing two command-line tools:
 
 - `calculator`: a full CLI calculator that
@@ -14,6 +12,41 @@ Simple C++ project providing two command-line tools:
   - can convert between number bases (binary, decimal, hexadecimal),
   - and includes an integrated divisors-finder.
 - `divisors`: a standalone program that lists the positive divisors of an integer.
+## Quickstart
+
+[![Get it from the Snap Store](https://snapcraft.io/en/light/install.svg)](https://snapcraft.io/cli-calculator)
+
+### Option 1: Install from the Snap Store
+
+Install the snap package directly:
+
+```bash
+sudo snap install cli-calculator
+```
+
+Run the calculator:
+
+```bash
+cli-calculator
+```
+### Option 2: Download the Latest Release (Manual Installation)
+
+1. Download the latest prebuilt binary from the **Releases** page.
+2. Make it executable:
+
+   ```bash
+   chmod +x calculator
+   ```
+3. Move it to your system path:
+
+   ```bash
+   sudo mv calculator /usr/local/bin/
+   ```
+4. Verify installation:
+
+   ```bash
+   calculator --help
+   ```
 
 ## Requirements
 
