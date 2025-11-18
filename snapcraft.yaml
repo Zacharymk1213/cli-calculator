@@ -1,7 +1,7 @@
 name: cli-calculator
 title: CLI Calculator
 base: core22
-version: '1.2.0'
+version: '1.3.0'
 license: Apache-2.0
 source-code:
   - https://github.com/Benedek553/cli-calculator
@@ -18,7 +18,7 @@ description: |
 
     * Supports `+`, `-`, `*`, `/`, `x`, `:` operators
     * Parentheses and nested expressions
-    * Built-in functions: `sin`, `cos`, `log`
+    * Built-in functions: `sin`, `cos`, `log`, `sqrt`
     * Factorial operator `!`
     * Floating‑point precision
 
