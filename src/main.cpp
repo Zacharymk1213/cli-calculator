@@ -371,7 +371,10 @@ std::vector<Token> tokenizeExpression(const std::string& expression) {
                 std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char ch) {
                     return static_cast<char>(std::tolower(ch));
                 });
-                if (lowered != "sin" && lowered != "cos" && lowered != "log" && lowered != "sqrt") {
+                if (lowered != "sin" && lowered != "cos" && lowered != "log" && lowered != "tan" &&
+                    lowered != "sqrt" && lowered != "exp" && lowered != "cot" &&
+                    lowered != "asin" && lowered != "acos" && lowered != "atan" &&
+                    lowered != "sinh") {
                     throw std::invalid_argument("Unknown function: " + functionName);
                 }
                 if (sawUnarySign && sign == -1) {
@@ -503,16 +506,16 @@ double evaluateExpression(const std::string& expression) {
                 break;
             case Token::Type::Operator:
                 if (token.op == '!') {
-                                if (stack.empty()) {
-                                    throw std::invalid_argument("Factorial operator missing operand.");
-                                }
+                    if (stack.empty()) {
+                        throw std::invalid_argument("Factorial operator missing operand.");
+                    }
                     double value = stack.back();
                     stack.back() = factorialOf(value);
                     break;
                 }
-                            if (stack.size() < 2) {
-                                throw std::invalid_argument("Invalid expression: insufficient operands.");
-                            }
+                if (stack.size() < 2) {
+                    throw std::invalid_argument("Invalid expression: insufficient operands.");
+                }
                 {
                     double rhs = stack.back();
                     stack.pop_back();
@@ -529,13 +532,13 @@ double evaluateExpression(const std::string& expression) {
                         case '*':
                             result = lhs * rhs;
                             break;
-                            case '/':
+                        case '/':
                             if (rhs == 0.0) {
                                 throw std::runtime_error("Division by zero in expression.");
                             }
                             result = lhs / rhs;
                             break;
-                            default:
+                        default:
                             throw std::invalid_argument("Unknown operator in expression.");
                     }
                     stack.push_back(result);
@@ -735,6 +738,7 @@ void handleConversions() {
         }
     }
 }
+
 void handleSquareRoot() {
     while (true) {
         std::cout << UNDERLINE << MAGENTA << "\n--- Square Root Calculator ---\n" << RESET;
@@ -786,10 +790,19 @@ void handleDivisors() {
 
 }  // namespace
 
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
+    for (std::size_t i = 0; i < vec.size(); ++i) {
+        if (i > 0) os << ", ";
+        os << vec[i];
+    }
+    return os;
+}
+
 int main(int argc, char** argv) {
     for (int i = 1; i < argc; ++i) {
         std::string arg(argv[i]);
-        if (arg == "--no-color" || "-nc") {
+        if (arg == "--no-color" || arg == "-nc") {
             setColorsEnabled(false);
             break;
         }
@@ -797,7 +810,11 @@ int main(int argc, char** argv) {
 
     for (int i = 1; i < argc; ++i) {
         std::string arg(argv[i]);
-        if (arg == "--eval" || "-e") {
+        if (arg == "--eval" || arg == "-e") {
+            if (i + 1 >= argc) {
+                std::cerr << RED << "Error: missing expression after " << arg << RESET << '\n';
+                return 1;
+            }
             try {
                 std::string expression(argv[i+1]);
                 double result = evaluateExpression(expression);
@@ -810,14 +827,55 @@ int main(int argc, char** argv) {
             }
         }
     }
-    for (int i= 1; i < argc; ++i) {
+
+    for (int i=1; i < argc; ++i) {
         std::string arg(argv[i]);
-        if (arg == "--square-root" || "-sqrt") {
-            std::string number(argv[i+1]);
-            double a = std::stod(number);
-            double result = sqrt(a);
-            std::cout << GREEN << "Result: " << RESET << result << '\n';
-            return 0;
+        if (arg == "--square-root" || arg == "-sqrt") {
+            if (i + 1 >= argc) {
+                std::cerr << RED << "Error: missing value after " << arg << RESET << '\n';
+                return 1;
+            }
+            try {
+                std::string number(argv[i+1]);
+                double a = std::stod(number);
+                if (a < 0.0) {
+                    std::cerr << RED << "Error: square root undefined for negative values." << RESET << '\n';
+                    return 1;
+                }
+                double result = std::sqrt(a);
+                std::cout << GREEN << "Result: " << RESET << result << '\n';
+                return 0;
+            } catch (const std::exception& ex) {
+                std::cerr << RED << "Error: unable to parse number: " << ex.what() << RESET << '\n';
+                return 1;
+            }
+        }
+    }
+
+    for (int i=1; i < argc; ++i) {
+        std::string arg(argv[i]);
+        if (arg == "--divisors" || arg == "-d") {
+            if (i + 1 >= argc) {
+                std::cerr << RED << "Error: Missing value after" << arg << RESET << '\n';
+                return 1;
+            }
+            try {
+                std::string input(argv[i+1]);
+                long long n = std::stoll(input);
+                std::vector<long long> result = calculateDivisors(n);
+                std::cout << GREEN << "Divisors: " << RESET;
+                for (std::size_t idx = 0; idx < result.size(); ++idx) {
+                    if (idx > 0) {
+                        std::cout << ", ";
+                    }
+                    std::cout << result[idx];
+                }
+                std::cout << '\n';
+                return 0;
+            } catch (const std::exception& ex) {
+                std::cerr << RED << "Error: unable to parse number" << RESET << '\n';
+                return 1;
+            }
         }
     }
 
