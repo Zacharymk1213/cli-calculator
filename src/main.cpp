@@ -10,258 +10,325 @@
 
 #include "divisors.hpp"
 #include "ansi_colors.hpp"
-
-namespace {
-void clearInput() {
-    std::cin.clear();
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-}
-
-std::string readLine(const std::string& prompt) {
-    std::cout << BOLD << BLUE << prompt << RESET;
-    std::cin >> std::ws;
-    std::string line;
-    std::getline(std::cin, line);
-    return line;
-}
-
-int readMenuChoice(int min, int max) {
-    int choice;
-    while (true) {
-        std::cout << BOLD << CYAN << "Select option: " << RESET;
-        if (std::cin >> choice && choice >= min && choice <= max) {
-            return choice;
-        }
-        std::cout << RED << "Invalid choice. Try again." << RESET << '\n';
-        clearInput();
+namespace
+{
+    void clearInput()
+    {
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
-}
 
-long long readInteger(const std::string& prompt) {
-    long long value;
-    while (true) {
+    std::string readLine(const std::string &prompt)
+    {
         std::cout << BOLD << BLUE << prompt << RESET;
-        if (std::cin >> value) {
-            return value;
+        std::cin >> std::ws;
+        std::string line;
+        std::getline(std::cin, line);
+        return line;
+    }
+
+    int readMenuChoice(int min, int max)
+    {
+        int choice;
+        while (true)
+        {
+            std::cout << BOLD << CYAN << "Select option: " << RESET;
+            if (std::cin >> choice && choice >= min && choice <= max)
+            {
+                return choice;
+            }
+            std::cout << RED << "Invalid choice. Try again." << RESET << '\n';
+            clearInput();
         }
-        std::cout << RED << "That doesn't look like an integer." << RESET << ' ';
-        clearInput();
     }
-}
 
-double readDouble(const std::string& prompt) {
-    double value;
-    while (true) {
-        std::cout << BOLD << BLUE << prompt << RESET;
-        if (std::cin >> value) {
-            return value;
+    long long readInteger(const std::string &prompt)
+    {
+        long long value;
+        while (true)
+        {
+            std::cout << BOLD << BLUE << prompt << RESET;
+            if (std::cin >> value)
+            {
+                return value;
+            }
+            std::cout << RED << "That doesn't look like an integer." << RESET << ' ';
+            clearInput();
         }
-        std::cout << RED << "That doesn't look like a valid number." << RESET << ' ';
-        clearInput();
-    }
-}
-
-bool isApproximatelyZero(double value, double epsilon = 1e-9) {
-    return std::abs(value) <= epsilon;
-}
-
-std::string trim(const std::string& text) {
-    auto notSpace = [](unsigned char ch) { return !std::isspace(ch); };
-    auto begin = std::find_if(text.begin(), text.end(), notSpace);
-    if (begin == text.end()) {
-        return "";
-    }
-    auto rbegin = std::find_if(text.rbegin(), text.rend(), notSpace);
-    return {begin, rbegin.base()};
-}
-
-std::string normalizeForBase(const std::string& input, int base) {
-    std::string trimmed = trim(input);
-    if (trimmed.empty()) {
-        throw std::invalid_argument("Empty input.");
     }
 
-    std::string sign;
-    std::size_t pos = 0;
-    if (trimmed[0] == '+' || trimmed[0] == '-') {
-        sign = trimmed.substr(0, 1);
-        pos = 1;
-    }
-
-    std::string body = trimmed.substr(pos);
-    auto hasPrefix = [](const std::string& value, char expected) {
-        if (value.size() <= 1 || value[0] != '0') {
-            return false;
+    double readDouble(const std::string &prompt)
+    {
+        double value;
+        while (true)
+        {
+            std::cout << BOLD << BLUE << prompt << RESET;
+            if (std::cin >> value)
+            {
+                return value;
+            }
+            std::cout << RED << "That doesn't look like a valid number." << RESET << ' ';
+            clearInput();
         }
-        char prefixChar = static_cast<char>(std::tolower(static_cast<unsigned char>(value[1])));
-        return prefixChar == expected;
-    };
-
-    if (base == 2 && hasPrefix(body, 'b')) {
-        body = body.substr(2);
-    } else if (base == 16 && hasPrefix(body, 'x')) {
-        body = body.substr(2);
     }
 
-    if (body.empty()) {
-        throw std::invalid_argument("No digits were provided.");
+    bool isApproximatelyZero(double value, double epsilon = 1e-9)
+    {
+        return std::abs(value) <= epsilon;
     }
 
-    return sign + body;
-}
-
-long long parseInteger(const std::string& text, int base) {
-    std::string normalized = normalizeForBase(text, base);
-    std::size_t processed = 0;
-    long long value = 0;
-    try {
-        value = std::stoll(normalized, &processed, base);
-    } catch (const std::invalid_argument&) {
-        throw std::invalid_argument("Invalid character among the digits.");
-    } catch (const std::out_of_range&) {
-        throw std::out_of_range("The provided number is too large to convert.");
-    }
-
-    if (processed != normalized.size()) {
-        throw std::invalid_argument("Invalid character among the digits.");
-    }
-
-    return value;
-}
-
-std::string formatInteger(long long value, int base) {
-    if (base == 10) {
-        return std::to_string(value);
-    }
-
-    const char* digits = "0123456789ABCDEF";
-    bool negative = value < 0;
-    unsigned long long magnitude =
-        negative ? static_cast<unsigned long long>(-(value + 1)) + 1ULL
-                 : static_cast<unsigned long long>(value);
-
-    if (magnitude == 0) {
-        return "0";
-    }
-
-    std::string converted;
-    while (magnitude > 0) {
-        converted.push_back(digits[magnitude % base]);
-        magnitude /= base;
-    }
-
-    std::reverse(converted.begin(), converted.end());
-
-    std::string prefix;
-    if (base == 2) {
-        prefix = "0b";
-    } else if (base == 16) {
-        prefix = "0x";
-    }
-
-    return (negative ? "-" : "") + prefix + converted;
-}
-
-bool isOperatorChar(char ch) {
-    ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-    return ch == '+' || ch == '-' || ch == '*' || ch == 'x' || ch == ':' || ch == '/';
-}
-
-char normalizeOperator(char ch) {
-    ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-    if (ch == 'x') {
-        return '*';
-    }
-    if (ch == ':') {
-        return '/';
-    }
-    return ch;
-}
-
-double factorialOf(double operand) {
-    double rounded = std::round(operand);
-    if (!isApproximatelyZero(operand - rounded)) {
-        throw std::invalid_argument("Factorial is only defined for integers.");
-    }
-
-    long long n = static_cast<long long>(rounded);
-    if (n < 0) {
-        throw std::invalid_argument("Factorial is not defined for negative numbers.");
-    }
-    if (n > 170) {
-        throw std::overflow_error("Factorial result would overflow double precision.");
-    }
-
-    long double result = 1.0L;
-    for (long long i = 2; i <= n; ++i) {
-        result *= static_cast<long double>(i);
-    }
-    return static_cast<double>(result);
-}
-
-double applyFunction(const std::string& functionName, double value) {
-    if (functionName == "sin") {
-        return std::sin(value);
-    }
-    if (functionName == "cos") {
-        return std::cos(value);
-    }
-    if (functionName == "log") {
-        if (value <= 0.0) {
-            throw std::domain_error("Logarithm undefined for non-positive values.");
+    std::string trim(const std::string &text)
+    {
+        auto notSpace = [](unsigned char ch)
+        { return !std::isspace(ch); };
+        auto begin = std::find_if(text.begin(), text.end(), notSpace);
+        if (begin == text.end())
+        {
+            return "";
         }
-        return std::log(value);
+        auto rbegin = std::find_if(text.rbegin(), text.rend(), notSpace);
+        return {begin, rbegin.base()};
     }
-    if (functionName == "tan") {
-        return std::tan(value);
-    }
-    if (functionName == "sqrt") {
-        if (value < 0.0) {
-            throw std::domain_error("Square root undefined for negative values.");
-        }
-        return std::sqrt(value);
-    }
-    if (functionName == "exp") {
-        return std::exp(value);
-    }
-    if (functionName == "cot") {
-        double tanValue = std::tan(value);
-        if (isApproximatelyZero(tanValue)) {
-            throw std::domain_error("Cotangent undefined for this value.");
-        }
-        return 1.0 / tanValue;
-    }
-    if (functionName == "asin") {
-        if (value < -1.0 || value > 1.0) {
-            throw std::domain_error("Arcsine undefined for this value.");
-        }
-        return std::asin(value);
-    }
-    if (functionName == "acos") {
-        if (value < -1.0 || value > 1.0) {
-            throw std::domain_error("Arccosine undefined for this value.");
-        }
-        return std::acos(value);
-    }
-    if (functionName == "atan") {
-        return std::atan(value);
-    }
-    if (functionName == "sinh") {
-        return std::sinh(value);
-    }
-    throw std::invalid_argument("Unknown function: " + functionName);
-}
 
-int chooseBase(const std::string& label) {
-    while (true) {
-        std::cout << label << '\n';
-        std::cout << YELLOW << " 1) " << RESET << CYAN << "Decimal (10)" << RESET << '\n';
-        std::cout << YELLOW << " 2) " << RESET << CYAN << "Binary (2)" << RESET << '\n';
-        std::cout << YELLOW << " 3) " << RESET << CYAN << "Hexadecimal (16)" << RESET << '\n';
-        std::cout << YELLOW << " 0) " << RESET << CYAN << "Back" << RESET << '\n';
+    std::string normalizeForBase(const std::string &input, int base)
+    {
+        std::string trimmed = trim(input);
+        if (trimmed.empty())
+        {
+            throw std::invalid_argument("Empty input.");
+        }
 
-        int choice = readMenuChoice(0, 3);
-        switch (choice) {
+        std::string sign;
+        std::size_t pos = 0;
+        if (trimmed[0] == '+' || trimmed[0] == '-')
+        {
+            sign = trimmed.substr(0, 1);
+            pos = 1;
+        }
+
+        std::string body = trimmed.substr(pos);
+        auto hasPrefix = [](const std::string &value, char expected)
+        {
+            if (value.size() <= 1 || value[0] != '0')
+            {
+                return false;
+            }
+            char prefixChar = static_cast<char>(std::tolower(static_cast<unsigned char>(value[1])));
+            return prefixChar == expected;
+        };
+
+        if (base == 2 && hasPrefix(body, 'b'))
+        {
+            body = body.substr(2);
+        }
+        else if (base == 16 && hasPrefix(body, 'x'))
+        {
+            body = body.substr(2);
+        }
+
+        if (body.empty())
+        {
+            throw std::invalid_argument("No digits were provided.");
+        }
+
+        return sign + body;
+    }
+
+    long long parseInteger(const std::string &text, int base)
+    {
+        std::string normalized = normalizeForBase(text, base);
+        std::size_t processed = 0;
+        long long value = 0;
+        try
+        {
+            value = std::stoll(normalized, &processed, base);
+        }
+        catch (const std::invalid_argument &)
+        {
+            throw std::invalid_argument("Invalid character among the digits.");
+        }
+        catch (const std::out_of_range &)
+        {
+            throw std::out_of_range("The provided number is too large to convert.");
+        }
+
+        if (processed != normalized.size())
+        {
+            throw std::invalid_argument("Invalid character among the digits.");
+        }
+
+        return value;
+    }
+
+    std::string formatInteger(long long value, int base)
+    {
+        if (base == 10)
+        {
+            return std::to_string(value);
+        }
+
+        const char *digits = "0123456789ABCDEF";
+        bool negative = value < 0;
+        unsigned long long magnitude =
+            negative ? static_cast<unsigned long long>(-(value + 1)) + 1ULL
+                     : static_cast<unsigned long long>(value);
+
+        if (magnitude == 0)
+        {
+            return "0";
+        }
+
+        std::string converted;
+        while (magnitude > 0)
+        {
+            converted.push_back(digits[magnitude % base]);
+            magnitude /= base;
+        }
+
+        std::reverse(converted.begin(), converted.end());
+
+        std::string prefix;
+        if (base == 2)
+        {
+            prefix = "0b";
+        }
+        else if (base == 16)
+        {
+            prefix = "0x";
+        }
+
+        return (negative ? "-" : "") + prefix + converted;
+    }
+
+    bool isOperatorChar(char ch)
+    {
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+        return ch == '+' || ch == '-' || ch == '*' || ch == 'x' || ch == ':' || ch == '/';
+    }
+
+    char normalizeOperator(char ch)
+    {
+        ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+        if (ch == 'x')
+        {
+            return '*';
+        }
+        if (ch == ':')
+        {
+            return '/';
+        }
+        return ch;
+    }
+
+    double factorialOf(double operand)
+    {
+        double rounded = std::round(operand);
+        if (!isApproximatelyZero(operand - rounded))
+        {
+            throw std::invalid_argument("Factorial is only defined for integers.");
+        }
+
+        long long n = static_cast<long long>(rounded);
+        if (n < 0)
+        {
+            throw std::invalid_argument("Factorial is not defined for negative numbers.");
+        }
+        if (n > 170)
+        {
+            throw std::overflow_error("Factorial result would overflow double precision.");
+        }
+
+        long double result = 1.0L;
+        for (long long i = 2; i <= n; ++i)
+        {
+            result *= static_cast<long double>(i);
+        }
+        return static_cast<double>(result);
+    }
+
+    double applyFunction(const std::string &functionName, double value)
+    {
+        if (functionName == "sin")
+        {
+            return std::sin(value);
+        }
+        if (functionName == "cos")
+        {
+            return std::cos(value);
+        }
+        if (functionName == "log")
+        {
+            if (value <= 0.0)
+            {
+                throw std::domain_error("Logarithm undefined for non-positive values.");
+            }
+            return std::log(value);
+        }
+        if (functionName == "tan")
+        {
+            return std::tan(value);
+        }
+        if (functionName == "sqrt")
+        {
+            if (value < 0.0)
+            {
+                throw std::domain_error("Square root undefined for negative values.");
+            }
+            return std::sqrt(value);
+        }
+        if (functionName == "exp")
+        {
+            return std::exp(value);
+        }
+        if (functionName == "cot")
+        {
+            double tanValue = std::tan(value);
+            if (isApproximatelyZero(tanValue))
+            {
+                throw std::domain_error("Cotangent undefined for this value.");
+            }
+            return 1.0 / tanValue;
+        }
+        if (functionName == "asin")
+        {
+            if (value < -1.0 || value > 1.0)
+            {
+                throw std::domain_error("Arcsine undefined for this value.");
+            }
+            return std::asin(value);
+        }
+        if (functionName == "acos")
+        {
+            if (value < -1.0 || value > 1.0)
+            {
+                throw std::domain_error("Arccosine undefined for this value.");
+            }
+            return std::acos(value);
+        }
+        if (functionName == "atan")
+        {
+            return std::atan(value);
+        }
+        if (functionName == "sinh")
+        {
+            return std::sinh(value);
+        }
+        throw std::invalid_argument("Unknown function: " + functionName);
+    }
+
+    int chooseBase(const std::string &label)
+    {
+        while (true)
+        {
+            std::cout << label << '\n';
+            std::cout << YELLOW << " 1) " << RESET << CYAN << "Decimal (10)" << RESET << '\n';
+            std::cout << YELLOW << " 2) " << RESET << CYAN << "Binary (2)" << RESET << '\n';
+            std::cout << YELLOW << " 3) " << RESET << CYAN << "Hexadecimal (16)" << RESET << '\n';
+            std::cout << YELLOW << " 0) " << RESET << CYAN << "Back" << RESET << '\n';
+
+            int choice = readMenuChoice(0, 3);
+            switch (choice)
+            {
             case 1:
                 return 10;
             case 2:
@@ -272,182 +339,230 @@ int chooseBase(const std::string& label) {
                 return 0;
             default:
                 break;
-        }
-    }
-}
-
-struct Token {
-    enum class Type { Number, Operator, Function, LeftParen, RightParen } type;
-    double value{};
-    char op{};
-    std::string func;
-};
-
-double parseNumberToken(const std::string& expr, std::size_t& index) {
-    std::size_t start = index;
-    bool hasDigit = false;
-    bool hasDot = false;
-    while (index < expr.size()) {
-        char c = expr[index];
-        if (std::isdigit(static_cast<unsigned char>(c))) {
-            hasDigit = true;
-            ++index;
-        } else if (c == '.') {
-            if (hasDot) {
-                throw std::invalid_argument("Multiple decimal separators found in number.");
             }
-            hasDot = true;
-            ++index;
-        } else {
-            break;
         }
     }
-    if (!hasDigit) {
-        throw std::invalid_argument("Expected a digit in the number.");
-    }
-    return std::stod(expr.substr(start, index - start));
-}
 
-std::vector<Token> tokenizeExpression(const std::string& expression) {
-    std::vector<Token> tokens;
-    std::size_t i = 0;
-    bool expectValue = true;
+    struct Token
+    {
+        enum class Type
+        {
+            Number,
+            Operator,
+            Function,
+            LeftParen,
+            RightParen
+        } type;
+        double value{};
+        char op{};
+        std::string func;
+    };
 
-    while (i < expression.size()) {
-        char c = expression[i];
-        if (std::isspace(static_cast<unsigned char>(c))) {
-            ++i;
-            continue;
+    double parseNumberToken(const std::string &expr, std::size_t &index)
+    {
+        std::size_t start = index;
+        bool hasDigit = false;
+        bool hasDot = false;
+        while (index < expr.size())
+        {
+            char c = expr[index];
+            if (std::isdigit(static_cast<unsigned char>(c)))
+            {
+                hasDigit = true;
+                ++index;
+            }
+            else if (c == '.')
+            {
+                if (hasDot)
+                {
+                    throw std::invalid_argument("Multiple decimal separators found in number.");
+                }
+                hasDot = true;
+                ++index;
+            }
+            else
+            {
+                break;
+            }
         }
+        if (!hasDigit)
+        {
+            throw std::invalid_argument("Expected a digit in the number.");
+        }
+        return std::stod(expr.substr(start, index - start));
+    }
 
-        if (expectValue) {
-            if (c == '(') {
-                tokens.push_back({Token::Type::LeftParen, 0.0, 0, ""});
+    std::vector<Token> tokenizeExpression(const std::string &expression)
+    {
+        std::vector<Token> tokens;
+        std::size_t i = 0;
+        bool expectValue = true;
+
+        while (i < expression.size())
+        {
+            char c = expression[i];
+            if (std::isspace(static_cast<unsigned char>(c)))
+            {
                 ++i;
                 continue;
             }
 
-            int sign = 1;
-            bool sawUnarySign = false;
-            if (c == '+' || c == '-') {
-                sawUnarySign = true;
-                sign = (c == '-') ? -1 : 1;
-                ++i;
-                while (i < expression.size() &&
-                       std::isspace(static_cast<unsigned char>(expression[i]))) {
+            if (expectValue)
+            {
+                if (c == '(')
+                {
+                    tokens.push_back({Token::Type::LeftParen, 0.0, 0, ""});
                     ++i;
+                    continue;
                 }
-                if (i >= expression.size()) {
-                    throw std::invalid_argument("Expression cannot end with a unary operator.");
+
+                int sign = 1;
+                bool sawUnarySign = false;
+                if (c == '+' || c == '-')
+                {
+                    sawUnarySign = true;
+                    sign = (c == '-') ? -1 : 1;
+                    ++i;
+                    while (i < expression.size() &&
+                           std::isspace(static_cast<unsigned char>(expression[i])))
+                    {
+                        ++i;
+                    }
+                    if (i >= expression.size())
+                    {
+                        throw std::invalid_argument("Expression cannot end with a unary operator.");
+                    }
+                    c = expression[i];
+                    if (c == '(')
+                    {
+                        if (sign == -1)
+                        {
+                            tokens.push_back({Token::Type::Number, 0.0, 0, ""});
+                            tokens.push_back({Token::Type::Operator, 0.0, '-', ""});
+                        }
+                        expectValue = true;
+                        continue;
+                    }
                 }
-                c = expression[i];
-                if (c == '(') {
-                    if (sign == -1) {
+                else
+                {
+                    sign = 1;
+                }
+
+                if (std::isdigit(static_cast<unsigned char>(c)) || c == '.')
+                {
+                    double number = parseNumberToken(expression, i);
+                    tokens.push_back({Token::Type::Number, sign * number, 0, ""});
+                    expectValue = false;
+                    continue;
+                }
+
+                if (std::isalpha(static_cast<unsigned char>(c)))
+                {
+                    std::size_t start = i;
+                    while (i < expression.size() &&
+                           std::isalpha(static_cast<unsigned char>(expression[i])))
+                    {
+                        ++i;
+                    }
+                    std::string functionName = expression.substr(start, i - start);
+                    std::string lowered = functionName;
+                    std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char ch)
+                                   { return static_cast<char>(std::tolower(ch)); });
+                    if (lowered != "sin" && lowered != "cos" && lowered != "log" && lowered != "tan" &&
+                        lowered != "sqrt" && lowered != "exp" && lowered != "cot" &&
+                        lowered != "asin" && lowered != "acos" && lowered != "atan" &&
+                        lowered != "sinh")
+                    {
+                        throw std::invalid_argument("Unknown function: " + functionName);
+                    }
+                    if (sawUnarySign && sign == -1)
+                    {
                         tokens.push_back({Token::Type::Number, 0.0, 0, ""});
                         tokens.push_back({Token::Type::Operator, 0.0, '-', ""});
                     }
+                    tokens.push_back({Token::Type::Function, 0.0, 0, lowered});
+
+                    std::size_t lookahead = i;
+                    while (lookahead < expression.size() &&
+                           std::isspace(static_cast<unsigned char>(expression[lookahead])))
+                    {
+                        ++lookahead;
+                    }
+                    if (lookahead >= expression.size() || expression[lookahead] != '(')
+                    {
+                        throw std::invalid_argument("Function '" + functionName +
+                                                    "' must be followed by parentheses.");
+                    }
+                    i = lookahead;
+                    continue;
+                }
+
+                throw std::invalid_argument("Expected a number or '(' in the expression.");
+            }
+            else
+            {
+                if (c == ')')
+                {
+                    tokens.push_back({Token::Type::RightParen, 0.0, 0, ""});
+                    ++i;
+                    continue;
+                }
+
+                if (c == '!')
+                {
+                    tokens.push_back({Token::Type::Operator, 0.0, '!', ""});
+                    ++i;
+                    continue;
+                }
+
+                if (isOperatorChar(c))
+                {
+                    tokens.push_back(
+                        {Token::Type::Operator, 0.0, normalizeOperator(c), ""});
+                    ++i;
                     expectValue = true;
                     continue;
                 }
-            } else {
-                sign = 1;
+
+                throw std::invalid_argument("Expected an operator or ')' in the expression.");
             }
-
-            if (std::isdigit(static_cast<unsigned char>(c)) || c == '.') {
-                double number = parseNumberToken(expression, i);
-                tokens.push_back({Token::Type::Number, sign * number, 0, ""});
-                expectValue = false;
-                continue;
-            }
-
-            if (std::isalpha(static_cast<unsigned char>(c))) {
-                std::size_t start = i;
-                while (i < expression.size() &&
-                       std::isalpha(static_cast<unsigned char>(expression[i]))) {
-                    ++i;
-                }
-                std::string functionName = expression.substr(start, i - start);
-                std::string lowered = functionName;
-                std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char ch) {
-                    return static_cast<char>(std::tolower(ch));
-                });
-                if (lowered != "sin" && lowered != "cos" && lowered != "log" && lowered != "tan" &&
-                    lowered != "sqrt" && lowered != "exp" && lowered != "cot" &&
-                    lowered != "asin" && lowered != "acos" && lowered != "atan" &&
-                    lowered != "sinh") {
-                    throw std::invalid_argument("Unknown function: " + functionName);
-                }
-                if (sawUnarySign && sign == -1) {
-                    tokens.push_back({Token::Type::Number, 0.0, 0, ""});
-                    tokens.push_back({Token::Type::Operator, 0.0, '-', ""});
-                }
-                tokens.push_back({Token::Type::Function, 0.0, 0, lowered});
-
-                std::size_t lookahead = i;
-                while (lookahead < expression.size() &&
-                       std::isspace(static_cast<unsigned char>(expression[lookahead]))) {
-                    ++lookahead;
-                }
-                if (lookahead >= expression.size() || expression[lookahead] != '(') {
-                    throw std::invalid_argument("Function '" + functionName +
-                                                "' must be followed by parentheses.");
-                }
-                i = lookahead;
-                continue;
-            }
-
-            throw std::invalid_argument("Expected a number or '(' in the expression.");
-        } else {
-            if (c == ')') {
-                tokens.push_back({Token::Type::RightParen, 0.0, 0, ""});
-                ++i;
-                continue;
-            }
-
-            if (c == '!') {
-                tokens.push_back({Token::Type::Operator, 0.0, '!', ""});
-                ++i;
-                continue;
-            }
-
-            if (isOperatorChar(c)) {
-                tokens.push_back(
-                    {Token::Type::Operator, 0.0, normalizeOperator(c), ""});
-                ++i;
-                expectValue = true;
-                continue;
-            }
-
-            throw std::invalid_argument("Expected an operator or ')' in the expression.");
         }
+
+        if (expectValue)
+        {
+            throw std::invalid_argument("Expression ended unexpectedly. Operand missing.");
+        }
+
+        return tokens;
     }
 
-    if (expectValue) {
-        throw std::invalid_argument("Expression ended unexpectedly. Operand missing.");
+    int precedence(char op)
+    {
+        if (op == '+' || op == '-')
+        {
+            return 1;
+        }
+        if (op == '*' || op == '/')
+        {
+            return 2;
+        }
+        if (op == '!')
+        {
+            return 3;
+        }
+        throw std::invalid_argument("Unknown operator encountered.");
     }
 
-    return tokens;
-}
+    std::vector<Token> toRpn(const std::vector<Token> &tokens)
+    {
+        std::vector<Token> output;
+        std::vector<Token> stack;
 
-int precedence(char op) {
-    if (op == '+' || op == '-') {
-        return 1;
-    }
-    if (op == '*' || op == '/') {
-        return 2;
-    }
-    if (op == '!') {
-        return 3;
-    }
-    throw std::invalid_argument("Unknown operator encountered.");
-}
-
-std::vector<Token> toRpn(const std::vector<Token>& tokens) {
-    std::vector<Token> output;
-    std::vector<Token> stack;
-
-    for (const Token& token : tokens) {
-        switch (token.type) {
+        for (const Token &token : tokens)
+        {
+            switch (token.type)
+            {
             case Token::Type::Number:
                 output.push_back(token);
                 break;
@@ -456,7 +571,8 @@ std::vector<Token> toRpn(const std::vector<Token>& tokens) {
                 break;
             case Token::Type::Operator:
                 while (!stack.empty() && stack.back().type == Token::Type::Operator &&
-                       precedence(stack.back().op) >= precedence(token.op)) {
+                       precedence(stack.back().op) >= precedence(token.op))
+                {
                     output.push_back(stack.back());
                     stack.pop_back();
                 }
@@ -466,54 +582,65 @@ std::vector<Token> toRpn(const std::vector<Token>& tokens) {
                 stack.push_back(token);
                 break;
             case Token::Type::RightParen:
-                while (!stack.empty() && stack.back().type != Token::Type::LeftParen) {
+                while (!stack.empty() && stack.back().type != Token::Type::LeftParen)
+                {
                     output.push_back(stack.back());
                     stack.pop_back();
                 }
-                if (stack.empty() || stack.back().type != Token::Type::LeftParen) {
+                if (stack.empty() || stack.back().type != Token::Type::LeftParen)
+                {
                     throw std::invalid_argument("Mismatched parentheses in expression.");
                 }
                 stack.pop_back();
-                if (!stack.empty() && stack.back().type == Token::Type::Function) {
+                if (!stack.empty() && stack.back().type == Token::Type::Function)
+                {
                     output.push_back(stack.back());
                     stack.pop_back();
                 }
                 break;
+            }
         }
+
+        while (!stack.empty())
+        {
+            if (stack.back().type == Token::Type::LeftParen ||
+                stack.back().type == Token::Type::RightParen)
+            {
+                throw std::invalid_argument("Mismatched parentheses in expression.");
+            }
+            output.push_back(stack.back());
+            stack.pop_back();
+        }
+
+        return output;
     }
 
-    while (!stack.empty()) {
-        if (stack.back().type == Token::Type::LeftParen ||
-            stack.back().type == Token::Type::RightParen) {
-            throw std::invalid_argument("Mismatched parentheses in expression.");
-        }
-        output.push_back(stack.back());
-        stack.pop_back();
-    }
+    double evaluateExpression(const std::string &expression)
+    {
+        std::vector<Token> tokens = tokenizeExpression(expression);
+        std::vector<Token> rpn = toRpn(tokens);
+        std::vector<double> stack;
 
-    return output;
-}
-
-double evaluateExpression(const std::string& expression) {
-    std::vector<Token> tokens = tokenizeExpression(expression);
-    std::vector<Token> rpn = toRpn(tokens);
-    std::vector<double> stack;
-
-    for (const Token& token : rpn) {
-        switch (token.type) {
+        for (const Token &token : rpn)
+        {
+            switch (token.type)
+            {
             case Token::Type::Number:
                 stack.push_back(token.value);
                 break;
             case Token::Type::Operator:
-                if (token.op == '!') {
-                    if (stack.empty()) {
+                if (token.op == '!')
+                {
+                    if (stack.empty())
+                    {
                         throw std::invalid_argument("Factorial operator missing operand.");
                     }
                     double value = stack.back();
                     stack.back() = factorialOf(value);
                     break;
                 }
-                if (stack.size() < 2) {
+                if (stack.size() < 2)
+                {
                     throw std::invalid_argument("Invalid expression: insufficient operands.");
                 }
                 {
@@ -522,30 +649,33 @@ double evaluateExpression(const std::string& expression) {
                     double lhs = stack.back();
                     stack.pop_back();
                     double result = 0.0;
-                    switch (token.op) {
-                        case '+':
-                            result = lhs + rhs;
-                            break;
-                        case '-':
-                            result = lhs - rhs;
-                            break;
-                        case '*':
-                            result = lhs * rhs;
-                            break;
-                        case '/':
-                            if (rhs == 0.0) {
-                                throw std::runtime_error("Division by zero in expression.");
-                            }
-                            result = lhs / rhs;
-                            break;
-                        default:
-                            throw std::invalid_argument("Unknown operator in expression.");
+                    switch (token.op)
+                    {
+                    case '+':
+                        result = lhs + rhs;
+                        break;
+                    case '-':
+                        result = lhs - rhs;
+                        break;
+                    case '*':
+                        result = lhs * rhs;
+                        break;
+                    case '/':
+                        if (rhs == 0.0)
+                        {
+                            throw std::runtime_error("Division by zero in expression.");
+                        }
+                        result = lhs / rhs;
+                        break;
+                    default:
+                        throw std::invalid_argument("Unknown operator in expression.");
                     }
                     stack.push_back(result);
                 }
                 break;
             case Token::Type::Function:
-                if (stack.empty()) {
+                if (stack.empty())
+                {
                     throw std::invalid_argument("Function missing operand.");
                 }
                 {
@@ -555,117 +685,147 @@ double evaluateExpression(const std::string& expression) {
                 break;
             default:
                 break;
-        }
-    }
-
-    if (stack.size() != 1) {
-        throw std::invalid_argument("Invalid expression: leftover operands.");
-    }
-
-    return stack.back();
-}
-
-bool askToContinue(const std::string& prompt) {
-    std::string answer;
-    while (true) {
-        std::cout << BOLD << BLUE << prompt << RESET;
-        if (!(std::cin >> answer)) {
-            clearInput();
-            continue;
-        }
-        if (answer.empty()) {
-            continue;
-        }
-
-        char first = static_cast<char>(std::tolower(static_cast<unsigned char>(answer[0])));
-        if (first == 'y') {
-            return true;
-        }
-        if (first == 'n') {
-            return false;
-        }
-        std::cout << YELLOW << "Please answer with 'y' or 'n'." << RESET << '\n';
-    }
-}
-
-void solveLinearEquation(double a, double b) {
-    if (isApproximatelyZero(a)) {
-        if (isApproximatelyZero(b)) {
-            std::cout << CYAN << "Every real number is a solution." << RESET << '\n';
-        } else {
-            std::cout << RED << "No solution exists for this equation." << RESET << '\n';
-        }
-        return;
-    }
-
-    double result = -b / a;
-    std::cout << GREEN << "Solution: x = " << RESET << result << '\n';
-}
-
-void solveQuadraticEquation(double a, double b, double c) {
-    if (isApproximatelyZero(a)) {
-        std::cout << YELLOW << "Coefficient 'a' is zero; falling back to a linear equation." << RESET << '\n';
-        solveLinearEquation(b, c);
-        return;
-    }
-
-    double discriminant = b * b - 4.0 * a * c;
-    constexpr double epsilon = 1e-9;
-
-    if (discriminant > epsilon) {
-        double sqrtDisc = std::sqrt(discriminant);
-        double denom = 2.0 * a;
-        std::cout << CYAN << "Two real solutions:" << RESET << '\n';
-        std::cout << GREEN << " x1 = " << RESET << (-b + sqrtDisc) / denom << '\n';
-        std::cout << GREEN << " x2 = " << RESET << (-b - sqrtDisc) / denom << '\n';
-    } else if (isApproximatelyZero(discriminant, epsilon)) {
-        double root = -b / (2.0 * a);
-        std::cout << GREEN << "One real solution (double root): x = " << RESET << root << '\n';
-    } else {
-        std::complex<double> sqrtDisc = std::sqrt(std::complex<double>(discriminant, 0.0));
-        std::complex<double> denom(2.0 * a, 0.0);
-        std::complex<double> x1 = (-b + sqrtDisc) / denom;
-        std::complex<double> x2 = (-b - sqrtDisc) / denom;
-
-        auto printComplex = [](const std::complex<double>& value) {
-            double realPart = value.real();
-            double imagPart = value.imag();
-            std::cout << GREEN << realPart << RESET;
-            if (!isApproximatelyZero(imagPart)) {
-                if (imagPart >= 0) {
-                    std::cout << " + " << GREEN << imagPart << RESET << "i";
-                } else {
-                    std::cout << " - " << GREEN << std::abs(imagPart) << RESET << "i";
-                }
             }
-        };
+        }
 
-        std::cout << "Two complex solutions:\n x1 = ";
-        printComplex(x1);
-        std::cout << "\n x2 = ";
-        printComplex(x2);
-        std::cout << '\n';
+        if (stack.size() != 1)
+        {
+            throw std::invalid_argument("Invalid expression: leftover operands.");
+        }
+
+        return stack.back();
     }
-}
 
-void handleEquations() {
-    while (true) {
-        std::cout << '\n' << UNDERLINE << MAGENTA << "--- Equation Solver ---" << RESET << '\n';
-        std::cout << YELLOW << " 1) " << RESET << CYAN << "Linear (a * x + b = 0)" << RESET << '\n';
-        std::cout << YELLOW << " 2) " << RESET << CYAN << "Quadratic (a * x^2 + b * x + c = 0)" << RESET << '\n';
-        std::cout << YELLOW << " 0) " << RESET << CYAN << "Back" << RESET << '\n';
+    bool askToContinue(const std::string &prompt)
+    {
+        std::string answer;
+        while (true)
+        {
+            std::cout << BOLD << BLUE << prompt << RESET;
+            if (!(std::cin >> answer))
+            {
+                clearInput();
+                continue;
+            }
+            if (answer.empty())
+            {
+                continue;
+            }
 
-        int choice = readMenuChoice(0, 2);
-        switch (choice) {
+            char first = static_cast<char>(std::tolower(static_cast<unsigned char>(answer[0])));
+            if (first == 'y')
+            {
+                return true;
+            }
+            if (first == 'n')
+            {
+                return false;
+            }
+            std::cout << YELLOW << "Please answer with 'y' or 'n'." << RESET << '\n';
+        }
+    }
+
+    void solveLinearEquation(double a, double b)
+    {
+        if (isApproximatelyZero(a))
+        {
+            if (isApproximatelyZero(b))
+            {
+                std::cout << CYAN << "Every real number is a solution." << RESET << '\n';
+            }
+            else
+            {
+                std::cout << RED << "No solution exists for this equation." << RESET << '\n';
+            }
+            return;
+        }
+
+        double result = -b / a;
+        std::cout << GREEN << "Solution: x = " << RESET << result << '\n';
+    }
+
+    void solveQuadraticEquation(double a, double b, double c)
+    {
+        if (isApproximatelyZero(a))
+        {
+            std::cout << YELLOW << "Coefficient 'a' is zero; falling back to a linear equation." << RESET << '\n';
+            solveLinearEquation(b, c);
+            return;
+        }
+
+        double discriminant = b * b - 4.0 * a * c;
+        constexpr double epsilon = 1e-9;
+
+        if (discriminant > epsilon)
+        {
+            double sqrtDisc = std::sqrt(discriminant);
+            double denom = 2.0 * a;
+            std::cout << CYAN << "Two real solutions:" << RESET << '\n';
+            std::cout << GREEN << " x1 = " << RESET << (-b + sqrtDisc) / denom << '\n';
+            std::cout << GREEN << " x2 = " << RESET << (-b - sqrtDisc) / denom << '\n';
+        }
+        else if (isApproximatelyZero(discriminant, epsilon))
+        {
+            double root = -b / (2.0 * a);
+            std::cout << GREEN << "One real solution (double root): x = " << RESET << root << '\n';
+        }
+        else
+        {
+            std::complex<double> sqrtDisc = std::sqrt(std::complex<double>(discriminant, 0.0));
+            std::complex<double> denom(2.0 * a, 0.0);
+            std::complex<double> x1 = (-b + sqrtDisc) / denom;
+            std::complex<double> x2 = (-b - sqrtDisc) / denom;
+
+            auto printComplex = [](const std::complex<double> &value)
+            {
+                double realPart = value.real();
+                double imagPart = value.imag();
+                std::cout << GREEN << realPart << RESET;
+                if (!isApproximatelyZero(imagPart))
+                {
+                    if (imagPart >= 0)
+                    {
+                        std::cout << " + " << GREEN << imagPart << RESET << "i";
+                    }
+                    else
+                    {
+                        std::cout << " - " << GREEN << std::abs(imagPart) << RESET << "i";
+                    }
+                }
+            };
+
+            std::cout << "Two complex solutions:\n x1 = ";
+            printComplex(x1);
+            std::cout << "\n x2 = ";
+            printComplex(x2);
+            std::cout << '\n';
+        }
+    }
+
+    void handleEquations()
+    {
+        while (true)
+        {
+            std::cout << '\n'
+                      << UNDERLINE << MAGENTA << "--- Equation Solver ---" << RESET << '\n';
+            std::cout << YELLOW << " 1) " << RESET << CYAN << "Linear (a * x + b = 0)" << RESET << '\n';
+            std::cout << YELLOW << " 2) " << RESET << CYAN << "Quadratic (a * x^2 + b * x + c = 0)" << RESET << '\n';
+            std::cout << YELLOW << " 0) " << RESET << CYAN << "Back" << RESET << '\n';
+
+            int choice = readMenuChoice(0, 2);
+            switch (choice)
+            {
             case 0:
                 return;
-            case 1: {
+            case 1:
+            {
                 double a = readDouble("Enter coefficient a: ");
                 double b = readDouble("Enter coefficient b: ");
                 solveLinearEquation(a, b);
                 break;
             }
-            case 2: {
+            case 2:
+            {
                 double a = readDouble("Enter coefficient a: ");
                 double b = readDouble("Enter coefficient b: ");
                 double c = readDouble("Enter coefficient c: ");
@@ -674,245 +834,362 @@ void handleEquations() {
             }
             default:
                 break;
-        }
-
-        if (!askToContinue("Would you like to solve another equation? (y/n): ")) {
-            return;
-        }
-    }
-}
-
-void handleArithmetic() {
-    while (true) {
-        std::cout << '\n' << UNDERLINE << MAGENTA << "--- Expression Evaluator ---" << RESET << '\n';
-        std::string expression = readLine("Enter an expression (type 'back' to return): ");
-        std::string lowered = trim(expression);
-        std::transform(lowered.begin(), lowered.end(), lowered.begin(),
-                       [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
-        if (lowered == "back") {
-            return;
-        }
-        try {
-            double result = evaluateExpression(expression);
-            std::cout << GREEN << "Result: " << RESET << result << '\n';
-        } catch (const std::exception& ex) {
-            std::cout << RED << "Error: " << RESET << ex.what() << '\n';
-        }
-
-        if (!askToContinue("Would you like to evaluate another expression? (y/n): ")) {
-            return;
-        }
-    }
-}
-
-void handleConversions() {
-    while (true) {
-        std::cout << '\n' << UNDERLINE << BLUE << "--- Numeral System Conversion ---" << RESET << '\n';
-        int fromBase = chooseBase(BOLD + YELLOW + std::string("Source base:") + RESET);
-        if (fromBase == 0) {
-            return;
-        }
-        int toBase = chooseBase(BOLD + BLUE + std::string("Target base:") + RESET);
-        if (toBase == 0) {
-            return;
-        }
-        if (fromBase == toBase) {
-            std::cout << RED << "Source and target base are identical; nothing to convert." << RESET << '\n';
-            return;
-        }
-
-        std::cout << BOLD << BLUE << "Enter the integer to convert: " << RESET;
-        std::string rawValue;
-        std::cin >> rawValue;
-
-        try {
-            long long decimalValue = parseInteger(rawValue, fromBase);
-            std::string converted = formatInteger(decimalValue, toBase);
-            std::cout << GREEN << "Result: " << RESET << converted << '\n';
-        } catch (const std::exception& ex) {
-            std::cout << RED << "Error: " << RESET << ex.what() << '\n';
-        }
-
-        if (!askToContinue("Would you like to convert another number? (y/n): ")) {
-            return;
-        }
-    }
-}
-
-void handleSquareRoot() {
-    while (true) {
-        std::cout << UNDERLINE << MAGENTA << "\n--- Square Root Calculator ---\n" << RESET;
-        double value = readDouble("Enter a number to find its square root: ");
-        
-        try {
-            if (value < 0.0) {
-                throw std::domain_error("Square root undefined for negative values.");
             }
-            double result = std::sqrt(value);
-            std::cout << "Square root of " << value << " = " << result << '\n';
-        } catch (const std::exception& ex) {
-            std::cout << "Error: " << ex.what() << '\n';
-        }
 
-        if (!askToContinue("Would you like to calculate another square root? (y/n): ")) {
-            return;
+            if (!askToContinue("Would you like to solve another equation? (y/n): "))
+            {
+                return;
+            }
         }
     }
-}
 
-void handleDivisors() {
-    while (true) {
-        std::cout << '\n' << UNDERLINE << MAGENTA << "--- Divisor Finder ---" << RESET << '\n';
-        long long value = readInteger("Enter an integer (0 allowed): ");
-        if (value == 0) {
-            std::cout << RED << "Zero has infinitely many divisors." << RESET << '\n';
-        } else {
-            try {
-                std::vector<long long> divisors = calculateDivisors(value);
-                std::cout << GREEN << "Divisors: " << RESET;
-                for (std::size_t idx = 0; idx < divisors.size(); ++idx) {
-                    if (idx > 0) {
-                        std::cout << ", ";
-                    }
-                    std::cout << divisors[idx];
-                }
-                std::cout << '\n';
-            } catch (const std::exception& ex) {
+    void handleArithmetic()
+    {
+        while (true)
+        {
+            std::cout << '\n'
+                      << UNDERLINE << MAGENTA << "--- Expression Evaluator ---" << RESET << '\n';
+            std::string expression = readLine("Enter an expression (type 'back' to return): ");
+            std::string lowered = trim(expression);
+            std::transform(lowered.begin(), lowered.end(), lowered.begin(),
+                           [](unsigned char ch)
+                           { return static_cast<char>(std::tolower(ch)); });
+            if (lowered == "back")
+            {
+                return;
+            }
+            try
+            {
+                double result = evaluateExpression(expression);
+                std::cout << GREEN << "Result: " << RESET << result << '\n';
+            }
+            catch (const std::exception &ex)
+            {
                 std::cout << RED << "Error: " << RESET << ex.what() << '\n';
             }
-        }
 
-        if (!askToContinue("Would you like to check another number? (y/n): ")) {
-            return;
+            if (!askToContinue("Would you like to evaluate another expression? (y/n): "))
+            {
+                return;
+            }
         }
     }
-}
 
-}  // namespace
+    void handleConversions()
+    {
+        while (true)
+        {
+            std::cout << '\n'
+                      << UNDERLINE << BLUE << "--- Numeral System Conversion ---" << RESET << '\n';
+            int fromBase = chooseBase(BOLD + YELLOW + std::string("Source base:") + RESET);
+            if (fromBase == 0)
+            {
+                return;
+            }
+            int toBase = chooseBase(BOLD + BLUE + std::string("Target base:") + RESET);
+            if (toBase == 0)
+            {
+                return;
+            }
+            if (fromBase == toBase)
+            {
+                std::cout << RED << "Source and target base are identical; nothing to convert." << RESET << '\n';
+                return;
+            }
 
-template<typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
-    for (std::size_t i = 0; i < vec.size(); ++i) {
-        if (i > 0) os << ", ";
+            std::cout << BOLD << BLUE << "Enter the integer to convert: " << RESET;
+            std::string rawValue;
+            std::cin >> rawValue;
+
+            try
+            {
+                long long decimalValue = parseInteger(rawValue, fromBase);
+                std::string converted = formatInteger(decimalValue, toBase);
+                std::cout << GREEN << "Result: " << RESET << converted << '\n';
+            }
+            catch (const std::exception &ex)
+            {
+                std::cout << RED << "Error: " << RESET << ex.what() << '\n';
+            }
+
+            if (!askToContinue("Would you like to convert another number? (y/n): "))
+            {
+                return;
+            }
+        }
+    }
+
+    void handleSquareRoot()
+    {
+        while (true)
+        {
+            std::cout << UNDERLINE << MAGENTA << "\n--- Square Root Calculator ---\n"
+                      << RESET;
+            double value = readDouble("Enter a number to find its square root: ");
+
+            try
+            {
+                if (value < 0.0)
+                {
+                    throw std::domain_error("Square root undefined for negative values.");
+                }
+                double result = std::sqrt(value);
+                std::cout << "Square root of " << value << " = " << result << '\n';
+            }
+            catch (const std::exception &ex)
+            {
+                std::cout << "Error: " << ex.what() << '\n';
+            }
+
+            if (!askToContinue("Would you like to calculate another square root? (y/n): "))
+            {
+                return;
+            }
+        }
+    }
+
+    void handleDivisors()
+    {
+        while (true)
+        {
+            std::cout << '\n'
+                      << UNDERLINE << MAGENTA << "--- Divisor Finder ---" << RESET << '\n';
+            long long value = readInteger("Enter an integer (0 allowed): ");
+            if (value == 0)
+            {
+                std::cout << RED << "Zero has infinitely many divisors." << RESET << '\n';
+            }
+            else
+            {
+                try
+                {
+                    std::vector<long long> divisors = calculateDivisors(value);
+                    std::cout << GREEN << "Divisors: " << RESET;
+                    for (std::size_t idx = 0; idx < divisors.size(); ++idx)
+                    {
+                        if (idx > 0)
+                        {
+                            std::cout << ", ";
+                        }
+                        std::cout << divisors[idx];
+                    }
+                    std::cout << '\n';
+                }
+                catch (const std::exception &ex)
+                {
+                    std::cout << RED << "Error: " << RESET << ex.what() << '\n';
+                }
+            }
+
+            if (!askToContinue("Would you like to check another number? (y/n): "))
+            {
+                return;
+            }
+        }
+    }
+
+} // namespace
+
+template <typename T>
+std::ostream &operator<<(std::ostream &os, const std::vector<T> &vec)
+{
+    for (std::size_t i = 0; i < vec.size(); ++i)
+    {
+        if (i > 0)
+            os << ", ";
         os << vec[i];
     }
     return os;
 }
 
-int main(int argc, char** argv) {
-    for (int i = 1; i < argc; ++i) {
+int main(int argc, char **argv)
+{
+    for (int i = 1; i < argc; ++i)
+    {
         std::string arg(argv[i]);
-        if (arg == "--no-color" || arg == "-nc") {
+        if (arg == "--no-color" || arg == "-nc")
+        {
             setColorsEnabled(false);
             break;
         }
     }
 
-    for (int i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i)
+    {
         std::string arg(argv[i]);
-        if (arg == "--eval" || arg == "-e") {
-            if (i + 1 >= argc) {
+        if (arg == "--eval" || arg == "-e")
+        {
+            if (i + 1 >= argc)
+            {
                 std::cerr << RED << "Error: missing expression after " << arg << RESET << '\n';
                 return 1;
             }
-            try {
-                std::string expression(argv[i+1]);
+            try
+            {
+                std::string expression(argv[i + 1]);
                 double result = evaluateExpression(expression);
                 std::cout << GREEN << "Result: " << RESET << result;
                 std::cout << '\n';
                 return 0;
-            } catch (const std::exception& ex) {
+            }
+            catch (const std::exception &ex)
+            {
                 std::cout << RED << "Error: " << RESET << ex.what() << '\n';
                 return 1;
             }
         }
     }
 
-    for (int i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i)
+    {
         std::string arg(argv[i]);
         int opt = 0;
-        if (arg == "--eval" || arg == "-e") {
+        if (arg == "--eval" || arg == "-e")
+        {
             opt = 1;
-        } else if (arg == "--square-root" || arg == "-sqrt") {
+        }
+        else if (arg == "--square-root" || arg == "-sqrt")
+        {
             opt = 2;
-        } else if (arg == "--divisors" || arg == "-d") {
+        }
+        else if (arg == "--divisors" || arg == "-d")
+        {
             opt = 3;
-        } else {
+        }
+        else if (arg == "--convert" || arg == "-c")
+        {
+            opt = 4;
+        }
+        else
+        {
             continue;
         }
 
-        switch (opt) {
-            case 1: {
-                if (i + 1 >= argc) {
-                    std::cerr << RED << "Error: missing expression after " << arg << RESET << '\n';
-                    return 1;
-                }
-                try {
-                    std::string expression(argv[i+1]);
-                    double result = evaluateExpression(expression);
-                    std::cout << GREEN << "Result: " << RESET << result << '\n';
-                    return 0;
-                } catch (const std::exception& ex) {
-                    std::cout << RED << "Error: " << RESET << ex.what() << '\n';
-                    return 1;
-                }
-                break;
+        switch (opt)
+        {
+        case 1:
+        {
+            if (i + 1 >= argc)
+            {
+                std::cerr << RED << "Error: missing expression after " << arg << RESET << '\n';
+                return 1;
             }
-            case 2: {
-                if (i + 1 >= argc) {
-                    std::cerr << RED << "Error: missing value after " << arg << RESET << '\n';
+            try
+            {
+                std::string expression(argv[i + 1]);
+                double result = evaluateExpression(expression);
+                std::cout << GREEN << "Result: " << RESET << result << '\n';
+                return 0;
+            }
+            catch (const std::exception &ex)
+            {
+                std::cout << RED << "Error: " << RESET << ex.what() << '\n';
+                return 1;
+            }
+            break;
+        }
+        case 2:
+        {
+            if (i + 1 >= argc)
+            {
+                std::cerr << RED << "Error: missing value after " << arg << RESET << '\n';
+                return 1;
+            }
+            try
+            {
+                std::string number(argv[i + 1]);
+                double a = std::stod(number);
+                if (a < 0.0)
+                {
+                    std::cerr << RED << "Error: square root undefined for negative values." << RESET << '\n';
                     return 1;
                 }
-                try {
-                    std::string number(argv[i+1]);
-                    double a = std::stod(number);
-                    if (a < 0.0) {
-                        std::cerr << RED << "Error: square root undefined for negative values." << RESET << '\n';
-                        return 1;
+                double result = std::sqrt(a);
+                std::cout << GREEN << "Result: " << RESET << result << '\n';
+                return 0;
+            }
+            catch (const std::exception &ex)
+            {
+                std::cerr << RED << "Error: unable to parse number: " << ex.what() << RESET << '\n';
+                return 1;
+            }
+            break;
+        }
+        case 3:
+        {
+            if (i + 1 >= argc)
+            {
+                std::cerr << RED << "Error: Missing value after" << arg << RESET << '\n';
+                return 1;
+            }
+            try
+            {
+                std::string input(argv[i + 1]);
+                long long n = std::stoll(input);
+                std::vector<long long> result = calculateDivisors(n);
+                std::cout << GREEN << "Divisors: " << RESET;
+                for (std::size_t idx = 0; idx < result.size(); ++idx)
+                {
+                    if (idx > 0)
+                    {
+                        std::cout << ", ";
                     }
-                    double result = std::sqrt(a);
-                    std::cout << GREEN << "Result: " << RESET << result << '\n';
-                    return 0;
-                } catch (const std::exception& ex) {
-                    std::cerr << RED << "Error: unable to parse number: " << ex.what() << RESET << '\n';
-                    return 1;
+                    std::cout << result[idx];
                 }
-                break;
+                std::cout << '\n';
+                return 0;
             }
-            case 3: {
-                if (i + 1 >= argc) {
-                    std::cerr << RED << "Error: Missing value after" << arg << RESET << '\n';
-                    return 1;
-                }
-                try {
-                    std::string input(argv[i+1]);
-                    long long n = std::stoll(input);
-                    std::vector<long long> result = calculateDivisors(n);
-                    std::cout << GREEN << "Divisors: " << RESET;
-                    for (std::size_t idx = 0; idx < result.size(); ++idx) {
-                        if (idx > 0) {
-                            std::cout << ", ";
-                        }
-                        std::cout << result[idx];
-                    }
-                    std::cout << '\n';
-                    return 0;
-                } catch (const std::exception& ex) {
-                    std::cerr << RED << "Error: unable to parse number" << RESET << '\n';
-                    return 1;
-                }
-                break;
+            catch (const std::exception &ex)
+            {
+                std::cerr << RED << "Error: unable to parse number" << RESET << '\n';
+                return 1;
             }
-            default:
-                break;
+            break;
+        }
+        case 4:
+        {
+            if (i + 3 >= argc)
+            {
+                std::cerr << RED << "Error: missing arguments after " << arg << RESET << '\n';
+                return 1;
+            }
+            try
+            {
+                std::string fromBaseStr(argv[i + 1]);
+                std::string toBaseStr(argv[i + 2]);
+                std::string valueStr(argv[i + 3]);
+
+                int fromBase = std::stoi(fromBaseStr);
+                int toBase = std::stoi(toBaseStr);
+                if ((fromBase != 2 && fromBase != 10 && fromBase != 16) ||
+                    (toBase != 2 && toBase != 10 && toBase != 16))
+                {
+                    std::cerr << RED << "Error: bases must be 2, 10, or 16." << RESET << '\n';
+                    return 1;
+                }
+                long long decimalValue = parseInteger(valueStr, fromBase);
+                std::string converted = formatInteger(decimalValue, toBase);
+                std::cout << GREEN << "Result: " << RESET << converted << '\n';
+                return 0;
+            }
+            catch (const std::exception &ex)
+            {
+                std::cerr << RED << "Error: unable to perform conversion: " << ex.what() << RESET << '\n';
+                return 1;
+            }
+            break;
+        }
+        default:
+            break;
         }
     }
 
-
     std::cout << BOLD << BLUE << "Welcome to the CLI Calculator" << RESET << '\n';
 
-    while (true) {
-        std::cout << '\n' << UNDERLINE << RED << "=== Main Menu ===" << RESET << '\n';
+    while (true)
+    {
+        std::cout << '\n'
+                  << UNDERLINE << RED << "=== Main Menu ===" << RESET << '\n';
         std::cout << YELLOW << " 1) " << RESET << CYAN << "Basic operations" << RESET << '\n';
         std::cout << YELLOW << " 2) " << RESET << CYAN << "Numeral system conversion" << RESET << '\n';
         std::cout << YELLOW << " 3) " << RESET << CYAN << "Divisor finder" << RESET << '\n';
@@ -922,32 +1199,33 @@ int main(int argc, char** argv) {
         std::cout << YELLOW << " 0) " << RESET << CYAN << "Exit" << RESET << '\n';
 
         int choice = readMenuChoice(0, 6);
-        switch (choice) {
-            case 1:
-                handleArithmetic();
-                break;
-            case 2:
-                handleConversions();
-                break;
-            case 3:
-                handleDivisors();
-                break;
-            case 4:
-                handleEquations();
-                break;
-            case 5:
-                handleSquareRoot();
-                break;
-            case 6:
-                std::cout << CYAN << "Opened a browser to report a bug, if don't see it, please visit:" << RESET << '\n';
-                std::system("xdg-open https://github.com/Benedek553/cli-calculator/issues");
-                std::cout << BLUE << "https://github.com/Benedek553/cli-calculator/issues" << RESET << '\n';
-                break;
-            case 0:
-                std::cout << BOLD << GREEN << "Goodbye!" << RESET << '\n';
-                return 0;
-            default:
-                break;
+        switch (choice)
+        {
+        case 1:
+            handleArithmetic();
+            break;
+        case 2:
+            handleConversions();
+            break;
+        case 3:
+            handleDivisors();
+            break;
+        case 4:
+            handleEquations();
+            break;
+        case 5:
+            handleSquareRoot();
+            break;
+        case 6:
+            std::cout << CYAN << "Opened a browser to report a bug, if don't see it, please visit:" << RESET << '\n';
+            std::system("xdg-open https://github.com/Benedek553/cli-calculator/issues");
+            std::cout << BLUE << "https://github.com/Benedek553/cli-calculator/issues" << RESET << '\n';
+            break;
+        case 0:
+            std::cout << BOLD << GREEN << "Goodbye!" << RESET << '\n';
+            return 0;
+        default:
+            break;
         }
     }
 }

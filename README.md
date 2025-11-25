@@ -84,6 +84,7 @@ cmake --build build --config Release
 - `--no-color` / `-nc`: disable ANSI colors in all outputs.
 - `--eval <expression>` / `-e <expression>`: evaluate and print the result, then exit.
 - `--square-root <value>` / `-sqrt <value>`: compute a single square root (fails for negative inputs).
+ - `--convert <from> <to> <value>` / `-c <from> <to> <value>`: convert an integer from one base to another and print the result. Accepted bases are `2`, `10` and `16`.
 
 ## Supported functions in expressions
 
@@ -96,6 +97,29 @@ cmake --build build --config Release
 - The number-base menu accepts numbers prefixed with `0b` or `0x`.
 - Trigonometric/logarithmic functions expect radians and must be written with parentheses (e.g. `sin(0.5)`).
 
+
+## Base conversion (CLI)
+
+- Description: Convert a single integer from one numeral system to another using the `--convert` (or `-c`) flag. The program accepts source and target bases as decimal integers (`2`, `10` or `16`) followed by the value to convert.
+- Input formats: the value may be signed (`+` or `-`) and may include the usual `0b` (binary) or `0x` (hex) prefixes. The converter also accepts plain digits for decimal input.
+- Output: the converted integer is printed with the conventional prefix for non-decimal bases (`0b` for binary, `0x` for hexadecimal). Decimal output is shown without a prefix.
+- Exit codes: returns `0` on success; prints an error and returns non-zero on invalid bases, malformed input, or overflow.
+
+Examples
+
+```bash
+# Convert decimal 78 to hexadecimal
+./build/src/calculator --convert 10 16 78
+# Result: 0x4E
+
+# Convert a binary value to decimal (accepts 0b prefix)
+./build/src/calculator -c 2 10 0b1011
+# Result: 11
+
+# Convert a negative hexadecimal value to binary
+./build/src/calculator --convert 16 2 -0x1A
+# Result: -0b11010
+```
 
 ## Contribution
 
