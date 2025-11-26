@@ -79,11 +79,28 @@ cmake --build build --config Release
 | Equation solver          | Solves linear (`a * x + b = 0`) and quadratic (`a * x^2 + b * x + c = 0`) equations, including complex roots. |
 | Divisor search           | Produces a sorted list of positive divisors for any integer (except 0). |
 
+## Code structure
+
+- `src/core/` shared logic:
+  - `expression.*`: tokenizes and evaluates expressions (functions, factorial, operators).
+  - `numeral_conversion.*`: parsing/formatting signed integers between bases with prefixes.
+  - `equations.*`: prints solutions for linear and quadratic equations.
+  - `input.*`: reusable console input helpers (prompts, validation).
+  - `math_utils.*`: floating-point helpers reused across modules.
+  - `divisors_lib.*`: shared divisor calculation used by both executables.
+- `src/app/` application layer:
+  - `cli_actions.*`: one-shot flag handling for `--eval`, `--convert`, `--divisors`, `--square-root`.
+  - `menu_handlers.*`: interactive menu flows for arithmetic, conversions, divisors, equations, square roots.
+- `src/main.cpp`: boots CLI colors, dispatches CLI flags, and runs the interactive menu.
+- `src/tools/divisors.cpp`: standalone divisors CLI entry point.
+- `src/ansi_colors.hpp`: shared ANSI color helpers (included by both apps).
+
 ## CLI flags
 
 - `--no-color` / `-nc`: disable ANSI colors in all outputs.
 - `--eval <expression>` / `-e <expression>`: evaluate and print the result, then exit.
 - `--square-root <value>` / `-sqrt <value>`: compute a single square root (fails for negative inputs).
+ - `--convert <from> <to> <value>` / `-c <from> <to> <value>`: convert an integer from one base to another and print the result. Accepted bases are `2`, `10` and `16`.
 
 ## Supported functions in expressions
 
@@ -96,6 +113,29 @@ cmake --build build --config Release
 - The number-base menu accepts numbers prefixed with `0b` or `0x`.
 - Trigonometric/logarithmic functions expect radians and must be written with parentheses (e.g. `sin(0.5)`).
 
+
+## Base conversion (CLI)
+
+- Description: Convert a single integer from one numeral system to another using the `--convert` (or `-c`) flag. The program accepts source and target bases as decimal integers (`2`, `10` or `16`) followed by the value to convert.
+- Input formats: the value may be signed (`+` or `-`) and may include the usual `0b` (binary) or `0x` (hex) prefixes. The converter also accepts plain digits for decimal input.
+- Output: the converted integer is printed with the conventional prefix for non-decimal bases (`0b` for binary, `0x` for hexadecimal). Decimal output is shown without a prefix.
+- Exit codes: returns `0` on success; prints an error and returns non-zero on invalid bases, malformed input, or overflow.
+
+Examples
+
+```bash
+# Convert decimal 78 to hexadecimal
+./build/src/calculator --convert 10 16 78
+# Result: 0x4E
+
+# Convert a binary value to decimal (accepts 0b prefix)
+./build/src/calculator -c 2 10 0b1011
+# Result: 11
+
+# Convert a negative hexadecimal value to binary
+./build/src/calculator --convert 16 2 -0x1A
+# Result: -0b11010
+```
 
 ## Contribution
 

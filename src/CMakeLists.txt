@@ -1,16 +1,36 @@
 cmake_minimum_required(VERSION 3.10)
 
-# Build the executables from the sources in this directory
-set(DIVISOR_SOURCES
-    divisors.cpp
-    divisors_lib.cpp
+set(CORE_SOURCES
+    core/divisors_lib.cpp
+    core/equations.cpp
+    core/expression.cpp
+    core/input.cpp
+    core/math_utils.cpp
+    core/numeral_conversion.cpp
 )
 
-add_executable(divisors ${DIVISOR_SOURCES})
-add_executable(calculator main.cpp divisors_lib.cpp)
+set(APP_SOURCES
+    main.cpp
+    app/cli_actions.cpp
+    app/menu_handlers.cpp
+)
 
-target_include_directories(divisors PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(calculator PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+set(TOOLS_SOURCES
+    tools/divisors.cpp
+)
+
+add_executable(divisors ${TOOLS_SOURCES} core/divisors_lib.cpp)
+add_executable(calculator ${APP_SOURCES} ${CORE_SOURCES})
+
+set(COMMON_INCLUDES
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/core
+    ${CMAKE_CURRENT_SOURCE_DIR}/app
+    ${CMAKE_CURRENT_SOURCE_DIR}/tools
+)
+
+target_include_directories(divisors PRIVATE ${COMMON_INCLUDES})
+target_include_directories(calculator PRIVATE ${COMMON_INCLUDES})
 
 if(MSVC)
   target_compile_options(divisors PRIVATE /W4)
