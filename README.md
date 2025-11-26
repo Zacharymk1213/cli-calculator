@@ -79,6 +79,22 @@ cmake --build build --config Release
 | Equation solver          | Solves linear (`a * x + b = 0`) and quadratic (`a * x^2 + b * x + c = 0`) equations, including complex roots. |
 | Divisor search           | Produces a sorted list of positive divisors for any integer (except 0). |
 
+## Code structure
+
+- `src/core/` shared logic:
+  - `expression.*`: tokenizes and evaluates expressions (functions, factorial, operators).
+  - `numeral_conversion.*`: parsing/formatting signed integers between bases with prefixes.
+  - `equations.*`: prints solutions for linear and quadratic equations.
+  - `input.*`: reusable console input helpers (prompts, validation).
+  - `math_utils.*`: floating-point helpers reused across modules.
+  - `divisors_lib.*`: shared divisor calculation used by both executables.
+- `src/app/` application layer:
+  - `cli_actions.*`: one-shot flag handling for `--eval`, `--convert`, `--divisors`, `--square-root`.
+  - `menu_handlers.*`: interactive menu flows for arithmetic, conversions, divisors, equations, square roots.
+- `src/main.cpp`: boots CLI colors, dispatches CLI flags, and runs the interactive menu.
+- `src/tools/divisors.cpp`: standalone divisors CLI entry point.
+- `src/ansi_colors.hpp`: shared ANSI color helpers (included by both apps).
+
 ## CLI flags
 
 - `--no-color` / `-nc`: disable ANSI colors in all outputs.
