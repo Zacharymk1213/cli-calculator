@@ -57,4 +57,15 @@ Makefile
 */.patch
 *.patch
 
-Testing/*
+tests/*.cmake
+tests/lib
+tests/run_tests
+tests/CMakeFiles/
+tests/CMakeCache.txt
+tests/Makefile
+tests/cmake_install.cmake
+tests/CMakeScripts/
+tests/_deps/*
+tests/*.log
+Testing/
+*.tcl

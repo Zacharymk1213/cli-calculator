@@ -19,9 +19,6 @@ set(TOOLS_SOURCES
     tools/divisors.cpp
 )
 
-add_executable(divisors ${TOOLS_SOURCES} core/divisors_lib.cpp)
-add_executable(calculator ${APP_SOURCES} ${CORE_SOURCES})
-
 set(COMMON_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/core
@@ -29,10 +26,17 @@ set(COMMON_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}/tools
 )
 
-target_include_directories(divisors PRIVATE ${COMMON_INCLUDES})
-target_include_directories(calculator PRIVATE ${COMMON_INCLUDES})
+add_library(calculator_core ${CORE_SOURCES})
+target_include_directories(calculator_core PUBLIC ${COMMON_INCLUDES})
+
+add_executable(divisors ${TOOLS_SOURCES})
+add_executable(calculator ${APP_SOURCES})
+
+target_link_libraries(divisors PRIVATE calculator_core)
+target_link_libraries(calculator PRIVATE calculator_core)
 
 if(MSVC)
   target_compile_options(divisors PRIVATE /W4)
   target_compile_options(calculator PRIVATE /W4)
 endif()
+enable_testing()

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(c-tools VERSION 0.1 LANGUAGES CXX)
+project(cli-calculator VERSION 0.1 LANGUAGES CXX)
 
 # Recommended: out-of-source builds
 set(CMAKE_CXX_STANDARD 17)
@@ -13,7 +13,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 endif()
 
 add_subdirectory(src)
-
+add_subdirectory(tests)
 option(BUILD_TESTING "Enable testing" ON)
 
 if(BUILD_TESTING)
