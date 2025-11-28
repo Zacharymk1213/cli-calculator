@@ -2,6 +2,7 @@
 
 #include "ansi_colors.hpp"
 #include "cli_actions.hpp"
+#include "core/variables.hpp"
 #include "menu_handlers.hpp"
 
 #include <iostream>
@@ -18,6 +19,11 @@ int main(int argc, char **argv)
             setColorsEnabled(false);
             break;
         }
+    }
+
+    if (!globalVariableStore().load())
+    {
+        std::cerr << RED << "Warning: unable to load vars.toml; variable changes will not persist." << RESET << '\n';
     }
 
     if (auto cliResult = handleCommandLine(argc, argv))

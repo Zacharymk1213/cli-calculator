@@ -6,6 +6,7 @@
 #include <cctype>
 #include <cmath>
 #include <complex>
+#include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -135,12 +136,13 @@ namespace
             Number,
             Operator,
             Function,
+            Variable,
             LeftParen,
             RightParen
         } type;
         double value{};
         char op{};
-        std::string func;
+        std::string text;
     };
 
     double parseNumberToken(const std::string &expr, std::size_t &index)
@@ -245,41 +247,50 @@ namespace
                 if (std::isalpha(static_cast<unsigned char>(c)))
                 {
                     std::size_t start = i;
+                    ++i;
                     while (i < expression.size() &&
-                           std::isalpha(static_cast<unsigned char>(expression[i])))
+                           (std::isalnum(static_cast<unsigned char>(expression[i])) || expression[i] == '_'))
                     {
                         ++i;
                     }
-                    std::string functionName = expression.substr(start, i - start);
-                    std::string lowered = functionName;
+                    std::string identifier = expression.substr(start, i - start);
+                    std::string lowered = identifier;
                     std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char ch)
                                    { return static_cast<char>(std::tolower(ch)); });
-                    if (lowered != "sin" && lowered != "cos" && lowered != "log" && lowered != "tan" &&
-                        lowered != "sqrt" && lowered != "exp" && lowered != "cot" &&
-                        lowered != "asin" && lowered != "acos" && lowered != "atan" &&
-                        lowered != "sinh")
+
+                    if (lowered == "sin" || lowered == "cos" || lowered == "log" || lowered == "tan" ||
+                        lowered == "sqrt" || lowered == "exp" || lowered == "cot" || lowered == "asin" ||
+                        lowered == "acos" || lowered == "atan" || lowered == "sinh")
                     {
-                        throw std::invalid_argument("Unknown function: " + functionName);
+                        if (sawUnarySign && sign == -1)
+                        {
+                            tokens.push_back({Token::Type::Number, 0.0, 0, ""});
+                            tokens.push_back({Token::Type::Operator, 0.0, '-', ""});
+                        }
+                        tokens.push_back({Token::Type::Function, 0.0, 0, lowered});
+
+                        std::size_t lookahead = i;
+                        while (lookahead < expression.size() &&
+                               std::isspace(static_cast<unsigned char>(expression[lookahead])))
+                        {
+                            ++lookahead;
+                        }
+                        if (lookahead >= expression.size() || expression[lookahead] != '(')
+                        {
+                            throw std::invalid_argument("Function '" + identifier +
+                                                        "' must be followed by parentheses.");
+                        }
+                        i = lookahead;
+                        continue;
                     }
+
                     if (sawUnarySign && sign == -1)
                     {
                         tokens.push_back({Token::Type::Number, 0.0, 0, ""});
                         tokens.push_back({Token::Type::Operator, 0.0, '-', ""});
                     }
-                    tokens.push_back({Token::Type::Function, 0.0, 0, lowered});
-
-                    std::size_t lookahead = i;
-                    while (lookahead < expression.size() &&
-                           std::isspace(static_cast<unsigned char>(expression[lookahead])))
-                    {
-                        ++lookahead;
-                    }
-                    if (lookahead >= expression.size() || expression[lookahead] != '(')
-                    {
-                        throw std::invalid_argument("Function '" + functionName +
-                                                    "' must be followed by parentheses.");
-                    }
-                    i = lookahead;
+                    tokens.push_back({Token::Type::Variable, 0.0, 0, lowered});
+                    expectValue = false;
                     continue;
                 }
 
@@ -351,6 +362,9 @@ namespace
             case Token::Type::Number:
                 output.push_back(token);
                 break;
+            case Token::Type::Variable:
+                output.push_back(token);
+                break;
             case Token::Type::Function:
                 stack.push_back(token);
                 break;
@@ -401,7 +415,8 @@ namespace
     }
 } // namespace
 
-double evaluateExpression(const std::string &expression)
+double evaluateExpression(const std::string &expression,
+                          const std::map<std::string, double> &variables)
 {
     std::vector<Token> tokens = tokenizeExpression(expression);
     std::vector<Token> rpn = toRpn(tokens);
@@ -466,9 +481,19 @@ double evaluateExpression(const std::string &expression)
             }
             {
                 double argument = stack.back();
-                stack.back() = applyFunction(token.func, argument);
+                stack.back() = applyFunction(token.text, argument);
             }
             break;
+        case Token::Type::Variable:
+        {
+            auto found = variables.find(token.text);
+            if (found == variables.end())
+            {
+                throw std::invalid_argument("Unknown variable: " + token.text);
+            }
+            stack.push_back(found->second);
+            break;
+        }
         default:
             break;
         }

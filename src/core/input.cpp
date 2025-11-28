@@ -1,6 +1,6 @@
 #include "input.hpp"
 
-#include "ansi_colors.hpp"
+#include "../ansi_colors.hpp"
 
 #include <cctype>
 #include <iostream>

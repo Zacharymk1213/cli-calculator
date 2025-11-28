@@ -4,6 +4,7 @@ set(CORE_SOURCES
     core/divisors_lib.cpp
     core/equations.cpp
     core/expression.cpp
+    core/variables.cpp
     core/input.cpp
     core/math_utils.cpp
     core/numeral_conversion.cpp

@@ -1,6 +1,7 @@
 #include "menu_handlers.hpp"
 
 #include "ansi_colors.hpp"
+#include "core/variables.hpp"
 #include "divisors.hpp"
 #include "equations.hpp"
 #include "expression.hpp"
@@ -11,7 +12,10 @@
 #include <cctype>
 #include <cmath>
 #include <exception>
+#include <iomanip>
 #include <iostream>
+#include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -57,6 +61,67 @@ namespace
             }
         }
     }
+
+    void printVariables(const std::map<std::string, double> &vars)
+    {
+        if (vars.empty())
+        {
+            std::cout << YELLOW << "No variables defined yet." << RESET << '\n';
+            return;
+        }
+        std::cout << CYAN << "Stored variables:" << RESET << '\n';
+        int precision = std::numeric_limits<double>::digits10 + 1;
+        for (const auto &entry : vars)
+        {
+            std::ostringstream stream;
+            stream << std::setprecision(precision) << entry.second;
+            std::cout << "  " << entry.first << " = " << stream.str() << '\n';
+        }
+    }
+
+    void handleSetVariable(VariableStore &store)
+    {
+        std::string name = trim(readLine("Variable name to create or update: "));
+        if (!VariableStore::isValidName(name))
+        {
+            std::cout << RED
+                      << "Names must start with a letter and may contain letters, digits, or underscores."
+                      << RESET << '\n';
+            return;
+        }
+        std::string prompt = "Enter value for '" + name + "': ";
+        double value = readDouble(prompt);
+        store.set(name, value);
+        if (!store.save())
+        {
+            std::cout << RED << "Unable to persist variables to vars.toml." << RESET << '\n';
+            return;
+        }
+        std::cout << GREEN << "Saved '" << name << "' = " << value << RESET << '\n';
+    }
+
+    void handleDeleteVariable(VariableStore &store)
+    {
+        std::string name = trim(readLine("Variable name to delete: "));
+        if (!VariableStore::isValidName(name))
+        {
+            std::cout << RED
+                      << "Names must start with a letter and may contain letters, digits, or underscores."
+                      << RESET << '\n';
+            return;
+        }
+        if (!store.remove(name))
+        {
+            std::cout << YELLOW << "Variable '" << name << "' does not exist." << RESET << '\n';
+            return;
+        }
+        if (!store.save())
+        {
+            std::cout << RED << "Unable to persist variables to vars.toml." << RESET << '\n';
+            return;
+        }
+        std::cout << GREEN << "Removed variable '" << name << "'." << RESET << '\n';
+    }
 } // namespace
 
 void handleArithmetic()
@@ -76,7 +141,7 @@ void handleArithmetic()
         }
         try
         {
-            double result = evaluateExpression(expression);
+            double result = evaluateExpression(expression, globalVariableStore().variables());
             std::cout << GREEN << "Result: " << RESET << result << '\n';
         }
         catch (const std::exception &ex)
@@ -245,6 +310,36 @@ void handleSquareRoot()
     }
 }
 
+void handleVariables()
+{
+    auto &store = globalVariableStore();
+    while (true)
+    {
+        std::cout << '\n'
+                  << UNDERLINE << BLUE << "--- Variable Manager ---" << RESET << '\n';
+        printVariables(store.variables());
+
+        std::cout << YELLOW << " 1) " << RESET << CYAN << "Set or update a variable" << RESET << '\n';
+        std::cout << YELLOW << " 2) " << RESET << CYAN << "Delete a variable" << RESET << '\n';
+        std::cout << YELLOW << " 0) " << RESET << CYAN << "Back" << RESET << '\n';
+
+        int choice = readMenuChoice(0, 2);
+        switch (choice)
+        {
+        case 0:
+            return;
+        case 1:
+            handleSetVariable(store);
+            break;
+        case 2:
+            handleDeleteVariable(store);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
 void runInteractiveCalculator()
 {
     while (true)
@@ -256,10 +351,11 @@ void runInteractiveCalculator()
         std::cout << YELLOW << " 3) " << RESET << CYAN << "Divisor finder" << RESET << '\n';
         std::cout << YELLOW << " 4) " << RESET << CYAN << "Equation solver" << RESET << '\n';
         std::cout << YELLOW << " 5) " << RESET << CYAN << "Square root calculator" << RESET << '\n';
-        std::cout << YELLOW << " 6) " << RESET << CYAN << "Report a bug" << RESET << '\n';
+        std::cout << YELLOW << " 6) " << RESET << CYAN << "Variable manager" << RESET << '\n';
+        std::cout << YELLOW << " 7) " << RESET << CYAN << "Report a bug" << RESET << '\n';
         std::cout << YELLOW << " 0) " << RESET << CYAN << "Exit" << RESET << '\n';
 
-        int choice = readMenuChoice(0, 6);
+        int choice = readMenuChoice(0, 7);
         switch (choice)
         {
         case 1:
@@ -278,6 +374,9 @@ void runInteractiveCalculator()
             handleSquareRoot();
             break;
         case 6:
+            handleVariables();
+            break;
+        case 7:
             std::cout << CYAN << "Opened a browser to report a bug, if don't see it, please visit:" << RESET << '\n';
             std::system("xdg-open https://github.com/Benedek553/cli-calculator/issues");
             std::cout << BLUE << "https://github.com/Benedek553/cli-calculator/issues" << RESET << '\n';

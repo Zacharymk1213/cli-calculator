@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <map>
 
 #include "core/expression.hpp"
 
@@ -28,4 +29,15 @@ TEST(ExpressionTest, TrigonometryAndFunctions)
 TEST(ExpressionTest, Factorial)
 {
     EXPECT_DOUBLE_EQ(evaluateExpression("5!"), 120);
+}
+
+TEST(ExpressionTest, Variables)
+{
+    std::map<std::string, double> vars{
+        {"x", 2.5},
+        {"pi", 3.141592653589793}
+    };
+    EXPECT_DOUBLE_EQ(evaluateExpression("x + 1", vars), 3.5);
+    EXPECT_NEAR(evaluateExpression("pi * 2", vars), 6.283185307179586, 1e-12);
+    EXPECT_NEAR(evaluateExpression("pi + x", vars), 5.641592653589793, 1e-12);
 }

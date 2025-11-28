@@ -6,4 +6,5 @@ void handleConversions();
 void handleDivisors();
 void handleEquations();
 void handleSquareRoot();
+void handleVariables();
 void runInteractiveCalculator();

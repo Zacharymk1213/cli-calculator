@@ -1,6 +1,7 @@
 #include "cli_actions.hpp"
 
 #include "ansi_colors.hpp"
+#include "core/variables.hpp"
 #include "divisors.hpp"
 #include "expression.hpp"
 #include "numeral_conversion.hpp"
@@ -31,7 +32,7 @@ std::optional<int> handleCommandLine(int argc, char **argv)
             try
             {
                 std::string expression(argv[i + 1]);
-                double result = evaluateExpression(expression);
+                double result = evaluateExpression(expression, globalVariableStore().variables());
                 std::cout << GREEN << "Result: " << RESET << result << '\n';
                 return 0;
             }
