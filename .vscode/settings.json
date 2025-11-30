@@ -55,7 +55,8 @@
         "streambuf": "cpp",
         "text_encoding": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "iomanip": "cpp"
     },
     "yaml.schemas": {
         "https://raw.githubusercontent.com/canonical/snapcraft/main/schema/snapcraft.json": "file:///home/farsang/cli-calculator/snapcraft.yaml"

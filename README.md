@@ -10,7 +10,9 @@ Simple C++ project providing two command-line tools:
 - `calculator`: a full CLI calculator that
   - can read expressions of arbitrary length (e.g. `2 x 4 : 16 + (3-1)`),
   - can convert between number bases (binary, decimal, hexadecimal),
-  - and includes an integrated divisors-finder.
+  - supports matrix addition, subtraction, and multiplication from the interactive menu,
+  - includes an integrated divisors-finder,
+  - and now offers a prime-factorization workflow that also stores the original number as a variable for later use.
 - `divisors`: a standalone program that lists the positive divisors of an integer.
 ## Quickstart
 
@@ -74,10 +76,13 @@ cmake --build build --config Release
 
 | Feature                  | Description |
 | ------------------------ | ----------- |
-| Expression evaluation    | Complex expressions with `+ - * / x :` operators, parentheses, `sin`, `cos`, `log`, and factorial (`!`). Supports floating-point operations. |
+| Expression evaluation    | Complex expressions with `+ - * / x :` operators, parentheses, `sin`, `cos`, `log`, and factorial (`!`). Supports floating-point operations and user-defined variables read from `vars.toml`. |
 | Number-base conversion   | Accepts binary (`0b`), decimal, and hexadecimal (`0x`) inputs and converts between them; sign handling included. |
 | Equation solver          | Solves linear (`a * x + b = 0`) and quadratic (`a * x^2 + b * x + c = 0`) equations, including complex roots. |
+| Matrix operations        | Adds, subtracts, or multiplies matrices of arbitrary size with guided prompts that validate dimensions before computing. |
 | Divisor search           | Produces a sorted list of positive divisors for any integer (except 0). |
+| Prime factorization      | Breaks positive integers into their prime powers, displays them in readable form (optionally starting with `-1` for negatives), and stores the factored integer in the `prime_factorization` variable. |
+| Variable persistence     | Menu option 7 lets you list/set/delete variables that are persisted in `vars.toml` and reused in subsequent evaluations. |
 
 ## Code structure
 
@@ -90,7 +95,7 @@ cmake --build build --config Release
   - `divisors_lib.*`: shared divisor calculation used by both executables.
 - `src/app/` application layer:
   - `cli_actions.*`: one-shot flag handling for `--eval`, `--convert`, `--divisors`, `--square-root`.
-  - `menu_handlers.*`: interactive menu flows for arithmetic, conversions, divisors, equations, square roots.
+  - `menu_handlers.*`: interactive menu flows for arithmetic, conversions, divisors, equations, matrix operations, prime factorization, and square roots.
 - `src/main.cpp`: boots CLI colors, dispatches CLI flags, and runs the interactive menu.
 - `src/tools/divisors.cpp`: standalone divisors CLI entry point.
 - `src/ansi_colors.hpp`: shared ANSI color helpers (included by both apps).
@@ -101,6 +106,12 @@ cmake --build build --config Release
 - `--eval <expression>` / `-e <expression>`: evaluate and print the result, then exit.
 - `--square-root <value>` / `-sqrt <value>`: compute a single square root (fails for negative inputs).
  - `--convert <from> <to> <value>` / `-c <from> <to> <value>`: convert an integer from one base to another and print the result. Accepted bases are `2`, `10` and `16`.
+
+## Variables
+
+- `vars.toml` stores user-defined variable names and values. The application loads it on start and overwrites it whenever you make changes through the UI.
+- Menu option **7) Variable manager** lists current entries, lets you create/update a variable (prompted for name/value), and remove entries you no longer need.
+- Valid variable names must start with a letter and can contain letters, digits, or underscores. Expressions referencing undefined variables throw an error.
 
 ## Supported functions in expressions
 
