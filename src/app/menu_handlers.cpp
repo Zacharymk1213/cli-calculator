@@ -1,14 +1,17 @@
 #include "menu_handlers.hpp"
 
 #include "ansi_colors.hpp"
+#include "core/matrix.hpp"
 #include "core/variables.hpp"
 #include "divisors.hpp"
+#include "prime_factors.hpp"
 #include "equations.hpp"
 #include "expression.hpp"
 #include "input.hpp"
 #include "numeral_conversion.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <cctype>
 #include <cmath>
 #include <exception>
@@ -121,6 +124,55 @@ namespace
             return;
         }
         std::cout << GREEN << "Removed variable '" << name << "'." << RESET << '\n';
+    }
+
+    std::size_t readPositiveDimension(const std::string &prompt)
+    {
+        while (true)
+        {
+            long long value = readInteger(prompt);
+            if (value <= 0)
+            {
+                std::cout << YELLOW << "Dimensions must be positive integers." << RESET << '\n';
+                continue;
+            }
+            return static_cast<std::size_t>(value);
+        }
+    }
+
+    Matrix readMatrixValues(const std::string &name, std::size_t rows, std::size_t columns)
+    {
+        Matrix matrix(rows, std::vector<double>(columns, 0.0));
+        std::cout << CYAN << "Enter values for matrix " << name << ":" << RESET << '\n';
+        for (std::size_t row = 0; row < rows; ++row)
+        {
+            for (std::size_t column = 0; column < columns; ++column)
+            {
+                std::ostringstream prompt;
+                prompt << "  " << name << '[' << (row + 1) << ',' << (column + 1) << "] = ";
+                matrix[row][column] = readDouble(prompt.str());
+            }
+        }
+        return matrix;
+    }
+
+    void printMatrixResult(const Matrix &matrix)
+    {
+        std::cout << GREEN << "Resulting matrix:" << RESET << '\n';
+        std::streamsize previousPrecision = std::cout.precision();
+        std::ios::fmtflags previousFlags = std::cout.flags();
+        std::cout << std::fixed << std::setprecision(4);
+        for (const auto &row : matrix)
+        {
+            std::cout << "  ";
+            for (const auto &value : row)
+            {
+                std::cout << std::setw(12) << value;
+            }
+            std::cout << '\n';
+        }
+        std::cout.precision(previousPrecision);
+        std::cout.flags(previousFlags);
     }
 } // namespace
 
@@ -240,6 +292,69 @@ void handleDivisors()
     }
 }
 
+void handlePrimeFactorization()
+{
+    while (true)
+    {
+        std::cout << '\n'
+                  << UNDERLINE << MAGENTA << "--- Prime Factorization ---" << RESET << '\n';
+        long long value = readInteger("Enter an integer: ");
+        if (value == 0)
+        {
+            std::cout << RED << "Zero does not have a well-defined prime factorization." << RESET << '\n';
+        }
+        else
+        {
+            long long absValue = value < 0 ? -value : value;
+            if (absValue == 1)
+            {
+                std::cout << YELLOW << value << " has no prime factors." << RESET << '\n';
+            }
+            else
+            {
+                try
+                {
+                    auto factors = calculatePrimeFactors(absValue);
+                    std::vector<std::string> parts;
+                    if (value < 0)
+                    {
+                        parts.push_back("-1");
+                    }
+                    for (const auto &factor : factors)
+                    {
+                        std::ostringstream part;
+                        part << factor.first;
+                        if (factor.second > 1)
+                        {
+                            part << '^' << factor.second;
+                        }
+                        parts.push_back(part.str());
+                    }
+                    std::cout << GREEN << "Prime factorization: " << RESET;
+                    for (std::size_t idx = 0; idx < parts.size(); ++idx)
+                    {
+                        if (idx > 0)
+                        {
+                            std::cout << " * ";
+                        }
+                        std::cout << parts[idx];
+                    }
+                    std::cout << '\n';
+                }
+                catch (const std::exception &ex)
+                {
+                    std::cout << RED << "Error: " << RESET << ex.what() << '\n';
+                }
+            }
+        }
+
+        if (!askToContinue("Would you like to factor another number? (y/n): "))
+        {
+            return;
+        }
+    }
+}
+
 void handleEquations()
 {
     while (true)
@@ -275,6 +390,67 @@ void handleEquations()
         }
 
         if (!askToContinue("Would you like to solve another equation? (y/n): "))
+        {
+            return;
+        }
+    }
+}
+
+void handleMatrixOperations()
+{
+    while (true)
+    {
+        std::cout << '\n'
+                  << UNDERLINE << BLUE << "--- Matrix Operations ---" << RESET << '\n';
+        std::cout << YELLOW << " 1) " << RESET << CYAN << "Matrix addition" << RESET << '\n';
+        std::cout << YELLOW << " 2) " << RESET << CYAN << "Matrix subtraction" << RESET << '\n';
+        std::cout << YELLOW << " 3) " << RESET << CYAN << "Matrix multiplication" << RESET << '\n';
+        std::cout << YELLOW << " 0) " << RESET << CYAN << "Back" << RESET << '\n';
+
+        int choice = readMenuChoice(0, 3);
+        if (choice == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            Matrix result;
+            switch (choice)
+            {
+            case 1:
+            case 2:
+            {
+                std::size_t rows = readPositiveDimension("Enter the number of rows: ");
+                std::size_t columns = readPositiveDimension("Enter the number of columns: ");
+                Matrix first = readMatrixValues("A", rows, columns);
+                Matrix second = readMatrixValues("B", rows, columns);
+                result = (choice == 1) ? addMatrices(first, second) : subtractMatrices(first, second);
+                break;
+            }
+            case 3:
+            {
+                std::size_t rowsA = readPositiveDimension("Enter the number of rows for matrix A: ");
+                std::size_t shared = readPositiveDimension("Enter the number of columns for matrix A: ");
+                Matrix first = readMatrixValues("A", rowsA, shared);
+                std::size_t columnsB = readPositiveDimension("Enter the number of columns for matrix B: ");
+                std::cout << YELLOW << "Matrix B automatically uses " << shared << " rows to match matrix A."
+                          << RESET << '\n';
+                Matrix second = readMatrixValues("B", shared, columnsB);
+                result = multiplyMatrices(first, second);
+                break;
+            }
+            default:
+                continue;
+            }
+            printMatrixResult(result);
+        }
+        catch (const std::exception &ex)
+        {
+            std::cout << RED << "Matrix error: " << RESET << ex.what() << '\n';
+        }
+
+        if (!askToContinue("Would you like to perform another matrix operation? (y/n): "))
         {
             return;
         }
@@ -350,12 +526,14 @@ void runInteractiveCalculator()
         std::cout << YELLOW << " 2) " << RESET << CYAN << "Numeral system conversion" << RESET << '\n';
         std::cout << YELLOW << " 3) " << RESET << CYAN << "Divisor finder" << RESET << '\n';
         std::cout << YELLOW << " 4) " << RESET << CYAN << "Equation solver" << RESET << '\n';
-        std::cout << YELLOW << " 5) " << RESET << CYAN << "Square root calculator" << RESET << '\n';
-        std::cout << YELLOW << " 6) " << RESET << CYAN << "Variable manager" << RESET << '\n';
-        std::cout << YELLOW << " 7) " << RESET << CYAN << "Report a bug" << RESET << '\n';
+        std::cout << YELLOW << " 5) " << RESET << CYAN << "Matrix operations" << RESET << '\n';
+        std::cout << YELLOW << " 6) " << RESET << CYAN << "Square root calculator" << RESET << '\n';
+        std::cout << YELLOW << " 7) " << RESET << CYAN << "Variable manager" << RESET << '\n';
+        std::cout << YELLOW << " 8) " << RESET << CYAN << "Prime factorization" << RESET << '\n';
+        std::cout << YELLOW << " 9) " << RESET << CYAN << "Report a bug" << RESET << '\n';
         std::cout << YELLOW << " 0) " << RESET << CYAN << "Exit" << RESET << '\n';
 
-        int choice = readMenuChoice(0, 7);
+        int choice = readMenuChoice(0, 9);
         switch (choice)
         {
         case 1:
@@ -371,12 +549,18 @@ void runInteractiveCalculator()
             handleEquations();
             break;
         case 5:
-            handleSquareRoot();
+            handleMatrixOperations();
             break;
         case 6:
-            handleVariables();
+            handleSquareRoot();
             break;
         case 7:
+            handleVariables();
+            break;
+        case 8:
+            handlePrimeFactorization();
+            break;
+        case 9:
             std::cout << CYAN << "Opened a browser to report a bug, if don't see it, please visit:" << RESET << '\n';
             std::system("xdg-open https://github.com/Benedek553/cli-calculator/issues");
             std::cout << BLUE << "https://github.com/Benedek553/cli-calculator/issues" << RESET << '\n';

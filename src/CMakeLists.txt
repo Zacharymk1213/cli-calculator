@@ -2,12 +2,14 @@ cmake_minimum_required(VERSION 3.10)
 
 set(CORE_SOURCES
     core/divisors_lib.cpp
+    core/prime_factors.cpp
     core/equations.cpp
     core/expression.cpp
     core/variables.cpp
     core/input.cpp
     core/math_utils.cpp
     core/numeral_conversion.cpp
+    core/matrix.cpp
 )
 
 set(APP_SOURCES
