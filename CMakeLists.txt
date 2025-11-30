@@ -5,7 +5,12 @@ project(cli-calculator VERSION 0.1 LANGUAGES CXX)
 # Recommended: out-of-source builds
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-include(CTest)
+
+option(BUILD_TESTING "Enable testing" ON)
+
+if(BUILD_TESTING)
+  include(CTest)
+endif()
 
 # Enable good warnings for GCC/Clang
 if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
@@ -13,10 +18,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "(GNU|Clang)")
 endif()
 
 add_subdirectory(src)
-add_subdirectory(tests)
-option(BUILD_TESTING "Enable testing" ON)
 
 if(BUILD_TESTING)
+  add_subdirectory(tests)
   enable_testing()
 
   add_test(
@@ -58,3 +62,4 @@ endif()
 
 install(TARGETS divisors calculator
         RUNTIME DESTINATION bin)
+
