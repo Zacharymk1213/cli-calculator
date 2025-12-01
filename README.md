@@ -108,7 +108,7 @@ cmake --build build --config Release
 - `--convert <from> <to> <value>` / `-c <from> <to> <value>`: convert an integer from one base to another and print the result. Accepted bases are `2`, `10` and `16`.
 - `--prime-factorization <value>` / `-pf <value>`: display the prime factors of the given integer (falls back to `-1` for negatives).
 - `--batch <file.txt>` / `-b <file.txt>`: execute commands listed in a text file (one CLI invocation per line, comments starting with `#` are ignored). Batch files recognize helper directives such as `@set <variable>` (store the previous numeric result), `@input <variable>` (prompt for a value/expression and store it), `@include <file>` (process another batch file), `@if <expression>` / `@endif` (conditional execution, truthy = non-zero), and `@unset <variable>` (remove a stored variable).
-- `--output json`: emit JSON responses for CLI flags so scripts can parse the calculator output more easily.
+- `--output <format>`: emit structured responses (`json`, `xml`, or `yaml`) for CLI flags so scripts can parse the calculator output more easily.
 
 All numeric CLI arguments (square root inputs, divisor targets, conversion bases/values, prime-factorization targets) accept variable names that were previously defined either via the menu or in batch mode via `@set`, `@input`, or an included file.
 

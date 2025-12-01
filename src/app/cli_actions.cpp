@@ -1,10 +1,8 @@
 #include "cli_actions.hpp"
-
 #include "ansi_colors.hpp"
 #include "cli_batch.hpp"
 #include "cli_commands.hpp"
 #include "cli_output.hpp"
-
 #include <iostream>
 #include <string>
 
@@ -30,6 +28,14 @@ std::optional<int> handleCommandLine(int argc, char **argv)
             if (format == "json")
             {
                 outputFormat = OutputFormat::Json;
+            }
+            else if (format == "xml")
+            {
+                outputFormat = OutputFormat::Xml;
+            }
+            else if (format == "yaml" || format == "yml")
+            {
+                outputFormat = OutputFormat::Yaml;
             }
             else
             {
@@ -57,13 +63,13 @@ std::optional<int> handleCommandLine(int argc, char **argv)
         {
             if (i + 1 >= argc)
             {
-                if (outputFormat == OutputFormat::Json)
+                if (outputFormat == OutputFormat::Text)
                 {
-                    printJsonError(std::cerr, "batch", "missing filename after " + arg);
+                    std::cerr << RED << "Error: missing filename after " << arg << RESET << '\n';
                 }
                 else
                 {
-                    std::cerr << RED << "Error: missing filename after " << arg << RESET << '\n';
+                    printStructuredError(std::cerr, outputFormat, "batch", "missing filename after " + arg);
                 }
                 return 1;
             }
@@ -75,13 +81,13 @@ std::optional<int> handleCommandLine(int argc, char **argv)
         {
             if (i + 1 >= argc)
             {
-                if (outputFormat == OutputFormat::Json)
+                if (outputFormat == OutputFormat::Text)
                 {
-                    printJsonError(std::cerr, "eval", "missing expression after " + arg);
+                    std::cerr << RED << "Error: missing expression after " << arg << RESET << '\n';
                 }
                 else
                 {
-                    std::cerr << RED << "Error: missing expression after " << arg << RESET << '\n';
+                    printStructuredError(std::cerr, outputFormat, "eval", "missing expression after " + arg);
                 }
                 return 1;
             }
@@ -92,13 +98,13 @@ std::optional<int> handleCommandLine(int argc, char **argv)
         {
             if (i + 1 >= argc)
             {
-                if (outputFormat == OutputFormat::Json)
+                if (outputFormat == OutputFormat::Text)
                 {
-                    printJsonError(std::cerr, "square-root", "missing value after " + arg);
+                    std::cerr << RED << "Error: missing value after " << arg << RESET << '\n';
                 }
                 else
                 {
-                    std::cerr << RED << "Error: missing value after " << arg << RESET << '\n';
+                    printStructuredError(std::cerr, outputFormat, "square-root", "missing value after " + arg);
                 }
                 return 1;
             }
@@ -109,13 +115,13 @@ std::optional<int> handleCommandLine(int argc, char **argv)
         {
             if (i + 1 >= argc)
             {
-                if (outputFormat == OutputFormat::Json)
+                if (outputFormat == OutputFormat::Text)
                 {
-                    printJsonError(std::cerr, "divisors", "missing value after " + arg);
+                    std::cerr << RED << "Error: Missing value after " << arg << RESET << '\n';
                 }
                 else
                 {
-                    std::cerr << RED << "Error: Missing value after " << arg << RESET << '\n';
+                    printStructuredError(std::cerr, outputFormat, "divisors", "missing value after " + arg);
                 }
                 return 2;
             }
@@ -126,13 +132,13 @@ std::optional<int> handleCommandLine(int argc, char **argv)
         {
             if (i + 3 >= argc)
             {
-                if (outputFormat == OutputFormat::Json)
+                if (outputFormat == OutputFormat::Text)
                 {
-                    printJsonError(std::cerr, "convert", "missing arguments after " + arg);
+                    std::cerr << RED << "Error: missing arguments after " << arg << RESET << '\n';
                 }
                 else
                 {
-                    std::cerr << RED << "Error: missing arguments after " << arg << RESET << '\n';
+                    printStructuredError(std::cerr, outputFormat, "convert", "missing arguments after " + arg);
                 }
                 return 2;
             }
@@ -146,13 +152,13 @@ std::optional<int> handleCommandLine(int argc, char **argv)
         {
             if (i + 1 >= argc)
             {
-                if (outputFormat == OutputFormat::Json)
+                if (outputFormat == OutputFormat::Text)
                 {
-                    printJsonError(std::cerr, "prime-factorization", "missing arguments after " + arg);
+                    std::cerr << RED << "Error: missing arguments after " << arg << RESET << '\n';
                 }
                 else
                 {
-                    std::cerr << RED << "Error: missing arguments after " << arg << RESET << '\n';
+                    printStructuredError(std::cerr, outputFormat, "prime-factorization", "missing arguments after " + arg);
                 }
                 return 2;
             }

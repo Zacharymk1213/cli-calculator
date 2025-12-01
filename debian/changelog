@@ -1,0 +1,5 @@
+cli-calculator (1.0-1) UNRELEASED; urgency=medium
+
+  * Initial release. (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Farsang Benedek <farsangbenedek@icloud.com>  Mon, 01 Dec 2025 08:34:24 +0100
