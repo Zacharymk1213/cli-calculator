@@ -9,6 +9,7 @@
 std::optional<int> handleCommandLine(int argc, char **argv)
 {
     OutputFormat outputFormat = OutputFormat::Text;
+    bool hasNonColorArgs = false;
 
     for (int i = 1; i < argc; ++i)
     {
@@ -43,6 +44,11 @@ std::optional<int> handleCommandLine(int argc, char **argv)
                 return 1;
             }
             ++i;
+            hasNonColorArgs = true;
+        }
+        else
+        {
+            hasNonColorArgs = true;
         }
     }
 
@@ -164,6 +170,35 @@ std::optional<int> handleCommandLine(int argc, char **argv)
             }
             return runPrimeFactorization(argv[i + 1], outputFormat);
         }
+
+        if (arg == "--version" || arg == "-v")
+        {
+            return runVersion(outputFormat);
+        }
+
+        if (arg == "--variables" || arg == "--list-variables")
+        {
+            return runListVariables(outputFormat);
+        }
+
+        if (!arg.empty())
+        {
+            if (outputFormat == OutputFormat::Text)
+            {
+                std::cerr << RED << "Error: unknown argument: " << arg << RESET << '\n';
+            }
+            else
+            {
+                printStructuredError(std::cerr, outputFormat, "unknown-argument", "unknown argument: " + arg);
+            }
+            return 1;
+        }
+    }
+
+    if (outputFormat != OutputFormat::Text && hasNonColorArgs)
+    {
+        printStructuredError(std::cerr, outputFormat, "output", "structured output requires a CLI action flag");
+        return 1;
     }
 
     return std::nullopt;

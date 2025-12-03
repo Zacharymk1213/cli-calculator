@@ -12,7 +12,8 @@ Simple C++ project providing two command-line tools:
   - can convert between number bases (binary, decimal, hexadecimal),
   - supports matrix addition, subtraction, and multiplication from the interactive menu,
   - includes an integrated divisors-finder,
-  - and now offers a prime-factorization workflow that also stores the original number as a variable for later use.
+  - offers a prime-factorization workflow that also stores the original number as a variable for later use,
+  - prints its version without launching the menu, and can list persisted variables directly from the CLI.
 - `divisors`: a standalone program that lists the positive divisors of an integer.
 ## Quickstart
 
@@ -82,6 +83,7 @@ cmake --build build --config Release
 | Matrix operations        | Adds, subtracts, or multiplies matrices of arbitrary size with guided prompts that validate dimensions before computing. |
 | Divisor search           | Produces a sorted list of positive divisors for any integer (except 0). |
 | Prime factorization      | Breaks positive integers into their prime powers, displays them in readable form (optionally starting with `-1` for negatives), and stores the factored integer in the `prime_factorization` variable. |
+| Variable inspection      | `--variables` lists persisted variable names and values without opening the interactive menu. |
 | Variable persistence     | Menu option 7 lets you list/set/delete variables that are persisted in `vars.toml` and reused in subsequent evaluations. |
 
 ## Code structure
@@ -107,10 +109,12 @@ cmake --build build --config Release
 - `--square-root <value>` / `-sqrt <value>`: compute a single square root (fails for negative inputs).
 - `--convert <from> <to> <value>` / `-c <from> <to> <value>`: convert an integer from one base to another and print the result. Accepted bases are `2`, `10` and `16`.
 - `--prime-factorization <value>` / `-pf <value>`: display the prime factors of the given integer (falls back to `-1` for negatives).
+- `--variables` / `--list-variables`: print every persisted variable and its value.
 - `--batch <file.txt>` / `-b <file.txt>`: execute commands listed in a text file (one CLI invocation per line, comments starting with `#` are ignored). Batch files recognize helper directives such as `@set <variable>` (store the previous numeric result), `@input <variable>` (prompt for a value/expression and store it), `@include <file>` (process another batch file), `@if <expression>` / `@endif` (conditional execution, truthy = non-zero), and `@unset <variable>` (remove a stored variable).
 - `--output <format>`: emit structured responses (`json`, `xml`, or `yaml`) for CLI flags so scripts can parse the calculator output more easily.
+- `--version` / `-v`: display the calculator version and exit.
 
-All numeric CLI arguments (square root inputs, divisor targets, conversion bases/values, prime-factorization targets) accept variable names that were previously defined either via the menu or in batch mode via `@set`, `@input`, or an included file.
+All numeric CLI arguments (square root inputs, divisor targets, conversion bases/values, prime-factorization targets) accept variable names that were previously defined either via the menu or in batch mode via `@set`, `@input`, or an included file. Structured output formats require a one-shot CLI flag (they are rejected if only `--output` is provided without an action).
 
 ## Variables
 

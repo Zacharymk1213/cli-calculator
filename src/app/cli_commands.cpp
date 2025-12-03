@@ -14,6 +14,10 @@
 #include <sstream>
 #include <vector>
 
+#ifndef CLI_CALCULATOR_VERSION
+#define CLI_CALCULATOR_VERSION "0.1"
+#endif
+
 int runEval(const std::string &expression, OutputFormat outputFormat, std::optional<double> *lastResult)
 {
     if (lastResult)
@@ -113,6 +117,86 @@ int runSquareRoot(const std::string &number, OutputFormat outputFormat, std::opt
     if (lastResult)
     {
         *lastResult = result;
+    }
+    return 0;
+}
+
+int runVersion(OutputFormat outputFormat)
+{
+    constexpr const char *version = CLI_CALCULATOR_VERSION;
+    if (outputFormat == OutputFormat::Text)
+    {
+        std::cout << BOLD << BLUE << "CLI Calculator version " << RESET << version << '\n';
+    }
+    else
+    {
+        std::ostringstream jsonPayload;
+        jsonPayload << "\"version\":\"" << jsonEscape(version) << "\"";
+
+        std::ostringstream xmlPayload;
+        xmlPayload << "<version>" << xmlEscape(version) << "</version>";
+
+        std::ostringstream yamlPayload;
+        yamlPayload << "version: " << yamlEscape(version);
+
+        printStructuredSuccess(std::cout, outputFormat, "version", jsonPayload.str(), xmlPayload.str(), yamlPayload.str());
+    }
+    return 0;
+}
+
+int runListVariables(OutputFormat outputFormat)
+{
+    const auto &vars = globalVariableStore().variables();
+    if (outputFormat == OutputFormat::Text)
+    {
+        if (vars.empty())
+        {
+            std::cout << YELLOW << "No variables stored." << RESET << '\n';
+            return 0;
+        }
+
+        std::cout << GREEN << "Stored variables:" << RESET << '\n';
+        for (const auto &entry : vars)
+        {
+            std::cout << " - " << entry.first << " = " << entry.second << '\n';
+        }
+    }
+    else
+    {
+        std::ostringstream jsonPayload;
+        jsonPayload << "\"variables\":[";
+        bool first = true;
+        for (const auto &entry : vars)
+        {
+            if (!first)
+            {
+                jsonPayload << ',';
+            }
+            first = false;
+            jsonPayload << "{\"name\":\"" << jsonEscape(entry.first) << "\",\"value\":" << entry.second << "}";
+        }
+        jsonPayload << ']';
+
+        std::ostringstream xmlPayload;
+        xmlPayload << "<variables>";
+        for (const auto &entry : vars)
+        {
+            xmlPayload << "<variable name=\"" << xmlEscape(entry.first) << "\">" << entry.second << "</variable>";
+        }
+        xmlPayload << "</variables>";
+
+        std::ostringstream yamlPayload;
+        yamlPayload << "variables:";
+        for (const auto &entry : vars)
+        {
+            yamlPayload << "\n  - name: " << yamlEscape(entry.first) << "\n    value: " << entry.second;
+        }
+        if (vars.empty())
+        {
+            yamlPayload << " []";
+        }
+
+        printStructuredSuccess(std::cout, outputFormat, "variables", jsonPayload.str(), xmlPayload.str(), yamlPayload.str());
     }
     return 0;
 }
@@ -426,6 +510,8 @@ int runHelp(OutputFormat outputFormat)
         "  -d, --divisors <number>       Calculate and display the divisors of the given number.\n"
         "  -c, --convert <from> <to> <value>  Convert value from one base to another (bases: 2, 10, 16).\n"
         "  -pf, --prime-factorization <value>  Factorize a number into primes.\n"
+        "  -v, --version                 Print the application version.\n"
+        "  --variables, --list-variables List persisted variables.\n"
         "  -b, --batch <file.txt>        Execute CLI flag commands listed in a text file (supports @set/@input/@include/@if/@endif/@unset helpers).\n"
         "  --output <format>            Print CLI flag results as json, xml, or yaml.\n"
         "  -nc, --no-color               Disable colored output.\n"
@@ -441,6 +527,8 @@ int runHelp(OutputFormat outputFormat)
         std::cout << "  -d, --divisors <number>       Calculate and display the divisors of the given number.\n";
         std::cout << "  -c, --convert <from> <to> <value>  Convert value from one base to another (bases: 2, 10, 16).\n";
         std::cout << "  -pf, --prime-factorization <value>  Factorize a number into primes.\n";
+        std::cout << "  -v, --version                 Print the application version.\n";
+        std::cout << "  --variables, --list-variables List persisted variables.\n";
         std::cout << "  -b, --batch <file.txt>        Execute CLI flag commands listed in a text file (supports @set/@input/@include/@if/@endif/@unset helpers).\n";
         std::cout << "  --output <format>            Print CLI flag results as json, xml, or yaml.\n";
         std::cout << "  -nc, --no-color               Disable colored output.\n";
