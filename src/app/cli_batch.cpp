@@ -167,6 +167,14 @@ std::string normalizeBatchFlag(const std::string &flag)
     {
         return "--prime-factorization";
     }
+    if (stripped == "v" || stripped == "version")
+    {
+        return "--version";
+    }
+    if (stripped == "variables" || stripped == "list-variables")
+    {
+        return "--variables";
+    }
     if (stripped == "h" || stripped == "help")
     {
         return "--help";
@@ -290,6 +298,16 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
         }
         state.lastResult.reset();
         return runPrimeFactorization(tokens[1], outputFormat);
+    }
+    if (flag == "--version")
+    {
+        state.lastResult.reset();
+        return runVersion(outputFormat);
+    }
+    if (flag == "--variables")
+    {
+        state.lastResult.reset();
+        return runListVariables(outputFormat);
     }
     if (flag == "--help")
     {
