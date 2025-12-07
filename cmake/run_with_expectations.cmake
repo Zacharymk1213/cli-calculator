@@ -8,6 +8,11 @@ foreach(var IN ITEMS cmd args expected_exit_code pattern)
 endforeach()
 
 # Execute the command with the provided arguments
+set(_working_directory_args)
+if(DEFINED working_directory)
+  set(_working_directory_args WORKING_DIRECTORY ${working_directory})
+endif()
+
 execute_process(
   COMMAND ${cmd} ${args}
   RESULT_VARIABLE actual_exit_code
@@ -15,6 +20,7 @@ execute_process(
   ERROR_VARIABLE cmd_stderr
   OUTPUT_STRIP_TRAILING_WHITESPACE
   ERROR_STRIP_TRAILING_WHITESPACE
+  ${_working_directory_args}
 )
 
 # Check exit code

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(cli-calculator VERSION 0.1 LANGUAGES CXX)
+project(cli-calculator VERSION 1.4 LANGUAGES CXX)
 
 # Recommended: out-of-source builds
 set(CMAKE_CXX_STANDARD 17)
@@ -22,6 +22,10 @@ add_subdirectory(src)
 if(BUILD_TESTING)
   add_subdirectory(tests)
   enable_testing()
+
+  set(TEST_WORKDIR_EMPTY_VARS "${CMAKE_BINARY_DIR}/test_workdirs/empty_vars")
+  file(MAKE_DIRECTORY ${TEST_WORKDIR_EMPTY_VARS})
+  file(REMOVE ${TEST_WORKDIR_EMPTY_VARS}/vars.toml)
 
   add_test(
     NAME calculator_eval_basic
@@ -57,6 +61,43 @@ if(BUILD_TESTING)
       "-Dargs=--no-color;--square-root;-9"
       -Dexpected_exit_code=1
       "-Dpattern=square root undefined for negative values"
+      -P ${CMAKE_SOURCE_DIR}/cmake/run_with_expectations.cmake)
+
+  add_test(
+    NAME calculator_version
+    COMMAND ${CMAKE_COMMAND}
+      -Dcmd=$<TARGET_FILE:calculator>
+      "-Dargs=--no-color;--version"
+      -Dexpected_exit_code=0
+      "-Dpattern=CLI Calculator version[ ]${PROJECT_VERSION}"
+      -P ${CMAKE_SOURCE_DIR}/cmake/run_with_expectations.cmake)
+
+  add_test(
+    NAME calculator_unknown_flag
+    COMMAND ${CMAKE_COMMAND}
+      -Dcmd=$<TARGET_FILE:calculator>
+      "-Dargs=--no-color;--bogus"
+      -Dexpected_exit_code=1
+      "-Dpattern=unknown argument: --bogus"
+      -P ${CMAKE_SOURCE_DIR}/cmake/run_with_expectations.cmake)
+
+  add_test(
+    NAME calculator_output_without_action
+    COMMAND ${CMAKE_COMMAND}
+      -Dcmd=$<TARGET_FILE:calculator>
+      "-Dargs=--output;json"
+      -Dexpected_exit_code=1
+      "-Dpattern=structured output requires a CLI action flag"
+      -P ${CMAKE_SOURCE_DIR}/cmake/run_with_expectations.cmake)
+
+  add_test(
+    NAME calculator_variables_empty
+    COMMAND ${CMAKE_COMMAND}
+      -Dcmd=$<TARGET_FILE:calculator>
+      "-Dargs=--no-color;--variables"
+      -Dexpected_exit_code=0
+      "-Dpattern=No variables stored"
+      -Dworking_directory=${TEST_WORKDIR_EMPTY_VARS}
       -P ${CMAKE_SOURCE_DIR}/cmake/run_with_expectations.cmake)
 endif()
 

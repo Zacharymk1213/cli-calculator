@@ -167,6 +167,14 @@ std::string normalizeBatchFlag(const std::string &flag)
     {
         return "--prime-factorization";
     }
+    if (stripped == "v" || stripped == "version")
+    {
+        return "--version";
+    }
+    if (stripped == "variables" || stripped == "list-variables")
+    {
+        return "--variables";
+    }
     if (stripped == "h" || stripped == "help")
     {
         return "--help";
@@ -200,13 +208,13 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     {
         if (tokens.size() < 2)
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "eval", "missing expression after --eval");
+                std::cerr << RED << "Error: missing expression after --eval" << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: missing expression after --eval" << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "eval", "missing expression after --eval");
             }
             return 1;
         }
@@ -216,13 +224,13 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     {
         if (tokens.size() < 2)
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "square-root", "missing value after --square-root");
+                std::cerr << RED << "Error: missing value after --square-root" << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: missing value after --square-root" << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "square-root", "missing value after --square-root");
             }
             return 1;
         }
@@ -232,13 +240,13 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     {
         if (tokens.size() < 2)
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "divisors", "missing value after --divisors");
+                std::cerr << RED << "Error: Missing value after --divisors" << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: Missing value after --divisors" << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "divisors", "missing value after --divisors");
             }
             return 2;
         }
@@ -249,25 +257,25 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     {
         if (tokens.size() < 4)
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "convert", "missing arguments after --convert");
+                std::cerr << RED << "Error: missing arguments after --convert" << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: missing arguments after --convert" << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "convert", "missing arguments after --convert");
             }
             return 2;
         }
         if (tokens.size() > 4)
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "convert", "unexpected extra tokens after --convert arguments");
+                std::cerr << RED << "Error: unexpected extra tokens after --convert arguments" << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: unexpected extra tokens after --convert arguments" << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "convert", "unexpected extra tokens after --convert arguments");
             }
             return 2;
         }
@@ -278,18 +286,28 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     {
         if (tokens.size() < 2)
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "prime-factorization", "missing arguments after --prime-factorization");
+                std::cerr << RED << "Error: missing arguments after --prime-factorization" << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: missing arguments after --prime-factorization" << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "prime-factorization", "missing arguments after --prime-factorization");
             }
             return 2;
         }
         state.lastResult.reset();
         return runPrimeFactorization(tokens[1], outputFormat);
+    }
+    if (flag == "--version")
+    {
+        state.lastResult.reset();
+        return runVersion(outputFormat);
+    }
+    if (flag == "--variables")
+    {
+        state.lastResult.reset();
+        return runListVariables(outputFormat);
     }
     if (flag == "--help")
     {
@@ -302,63 +320,68 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
         if (tokens.size() < 2)
         {
             state.lastResult.reset();
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "set", "missing variable name after @set");
+                std::cerr << RED << "Error: missing variable name after @set" << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: missing variable name after @set" << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "set", "missing variable name after @set");
             }
             return 1;
         }
         if (!state.lastResult)
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "set", "no numeric result available to store");
+                std::cerr << RED << "Error: no numeric result available to store." << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: no numeric result available to store." << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "set", "no numeric result available to store");
             }
             return 1;
         }
         const std::string &variableName = tokens[1];
         if (!VariableStore::isValidName(variableName))
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "set", "invalid variable name: " + variableName);
+                std::cerr << RED << "Error: invalid variable name: " << variableName << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: invalid variable name: " << variableName << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "set", "invalid variable name: " + variableName);
             }
             return 1;
         }
         globalVariableStore().set(variableName, *state.lastResult);
         if (!globalVariableStore().save())
         {
-            if (outputFormat == OutputFormat::Json)
-            {
-                printJsonError(std::cerr, "set", "unable to persist variable store");
-            }
-            else
+            if (outputFormat == OutputFormat::Text)
             {
                 std::cerr << RED << "Error: unable to persist variable store." << RESET << '\n';
             }
+            else
+            {
+                printStructuredError(std::cerr, outputFormat, "set", "unable to persist variable store");
+            }
             return 1;
         }
-        if (outputFormat == OutputFormat::Json)
+        if (outputFormat == OutputFormat::Text)
         {
-            std::ostringstream payload;
-            payload << "\"variable\":\"" << jsonEscape(variableName) << "\",\"value\":" << *state.lastResult;
-            printJsonSuccess(std::cout, "set", payload.str());
+            std::cout << GREEN << "Stored last result in variable '" << variableName << "'." << RESET << '\n';
         }
         else
         {
-            std::cout << GREEN << "Stored last result in variable '" << variableName << "'." << RESET << '\n';
+            std::ostringstream jsonPayload;
+            jsonPayload << "\"variable\":\"" << jsonEscape(variableName) << "\",\"value\":" << *state.lastResult;
+            std::ostringstream xmlPayload;
+            xmlPayload << "<variable>" << xmlEscape(variableName) << "</variable><value>" << *state.lastResult << "</value>";
+            std::ostringstream yamlPayload;
+            yamlPayload << "variable: " << yamlEscape(variableName) << '\n'
+                        << "value: " << *state.lastResult;
+            printStructuredSuccess(std::cout, outputFormat, "set", jsonPayload.str(), xmlPayload.str(), yamlPayload.str());
         }
         return 0;
     }
@@ -367,26 +390,26 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     {
         if (tokens.size() < 2)
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "input", "missing variable name after @input");
+                std::cerr << RED << "Error: missing variable name after @input" << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: missing variable name after @input" << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "input", "missing variable name after @input");
             }
             return 1;
         }
         const std::string &variableName = tokens[1];
         if (!VariableStore::isValidName(variableName))
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "input", "invalid variable name: " + variableName);
+                std::cerr << RED << "Error: invalid variable name: " << variableName << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: invalid variable name: " << variableName << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "input", "invalid variable name: " + variableName);
             }
             return 1;
         }
@@ -395,26 +418,26 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
         std::string line;
         if (!std::getline(std::cin, line))
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "input", "failed to read value for variable: " + variableName);
+                std::cerr << RED << "Error: failed to read value for variable '" << variableName << "'." << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: failed to read value for variable '" << variableName << "'." << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "input", "failed to read value for variable: " + variableName);
             }
             return 1;
         }
         std::string trimmed = trimCopy(line);
         if (trimmed.empty())
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "input", "no value entered for variable: " + variableName);
+                std::cerr << RED << "Error: no value entered for variable '" << variableName << "'." << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: no value entered for variable '" << variableName << "'." << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "input", "no value entered for variable: " + variableName);
             }
             return 1;
         }
@@ -426,13 +449,13 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
         }
         catch (const std::exception &ex)
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "input", "unable to evaluate value: " + std::string(ex.what()));
+                std::cerr << RED << "Error: unable to evaluate value: " << ex.what() << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: unable to evaluate value: " << ex.what() << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "input", "unable to evaluate value: " + std::string(ex.what()));
             }
             return 1;
         }
@@ -440,26 +463,31 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
         globalVariableStore().set(variableName, value);
         if (!globalVariableStore().save())
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "input", "unable to persist variable store");
+                std::cerr << RED << "Error: unable to persist variable store." << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: unable to persist variable store." << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "input", "unable to persist variable store");
             }
             return 1;
         }
 
-        if (outputFormat == OutputFormat::Json)
+        if (outputFormat == OutputFormat::Text)
         {
-            std::ostringstream payload;
-            payload << "\"variable\":\"" << jsonEscape(variableName) << "\",\"value\":" << value;
-            printJsonSuccess(std::cout, "input", payload.str());
+            std::cout << GREEN << "Stored input in variable '" << variableName << "'." << RESET << '\n';
         }
         else
         {
-            std::cout << GREEN << "Stored input in variable '" << variableName << "'." << RESET << '\n';
+            std::ostringstream jsonPayload;
+            jsonPayload << "\"variable\":\"" << jsonEscape(variableName) << "\",\"value\":" << value;
+            std::ostringstream xmlPayload;
+            xmlPayload << "<variable>" << xmlEscape(variableName) << "</variable><value>" << value << "</value>";
+            std::ostringstream yamlPayload;
+            yamlPayload << "variable: " << yamlEscape(variableName) << '\n'
+                        << "value: " << value;
+            printStructuredSuccess(std::cout, outputFormat, "input", jsonPayload.str(), xmlPayload.str(), yamlPayload.str());
         }
         return 0;
     }
@@ -467,13 +495,13 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     {
         if (tokens.size() < 2)
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "include", "missing filename after @include");
+                std::cerr << RED << "Error: missing filename after @include" << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: missing filename after @include" << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "include", "missing filename after @include");
             }
             return 1;
         }
@@ -489,49 +517,43 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     {
         if (tokens.size() < 2)
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "unset", "missing variable name after @unset");
+                std::cerr << RED << "Error: missing variable name after @unset" << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: missing variable name after @unset" << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "unset", "missing variable name after @unset");
             }
             return 1;
         }
         const std::string &variableName = tokens[1];
         if (!VariableStore::isValidName(variableName))
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "unset", "invalid variable name: " + variableName);
+                std::cerr << RED << "Error: invalid variable name: " << variableName << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: invalid variable name: " << variableName << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "unset", "invalid variable name: " + variableName);
             }
             return 1;
         }
         bool removed = globalVariableStore().remove(variableName);
         if (!globalVariableStore().save())
         {
-            if (outputFormat == OutputFormat::Json)
-            {
-                printJsonError(std::cerr, "unset", "unable to persist variable store");
-            }
-            else
+            if (outputFormat == OutputFormat::Text)
             {
                 std::cerr << RED << "Error: unable to persist variable store." << RESET << '\n';
             }
+            else
+            {
+                printStructuredError(std::cerr, outputFormat, "unset", "unable to persist variable store");
+            }
             return 1;
         }
-        if (outputFormat == OutputFormat::Json)
-        {
-            std::ostringstream payload;
-            payload << "\"variable\":\"" << jsonEscape(variableName) << "\",\"removed\":" << (removed ? "true" : "false");
-            printJsonSuccess(std::cout, "unset", payload.str());
-        }
-        else
+        if (outputFormat == OutputFormat::Text)
         {
             if (removed)
             {
@@ -542,6 +564,18 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
                 std::cout << YELLOW << "Variable '" << variableName << "' did not exist." << RESET << '\n';
             }
         }
+        else
+        {
+            std::ostringstream jsonPayload;
+            jsonPayload << "\"variable\":\"" << jsonEscape(variableName) << "\",\"removed\":" << (removed ? "true" : "false");
+            std::ostringstream xmlPayload;
+            xmlPayload << "<variable>" << xmlEscape(variableName) << "</variable><removed>" << (removed ? "true" : "false")
+                       << "</removed>";
+            std::ostringstream yamlPayload;
+            yamlPayload << "variable: " << yamlEscape(variableName) << '\n'
+                        << "removed: " << (removed ? "true" : "false");
+            printStructuredSuccess(std::cout, outputFormat, "unset", jsonPayload.str(), xmlPayload.str(), yamlPayload.str());
+        }
         return 0;
     }
     if (flag == "@if")
@@ -549,13 +583,13 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
         if (tokens.size() < 2)
         {
             state.conditionStack.push_back(false);
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "if", "missing expression after @if");
+                std::cerr << RED << "Error: missing expression after @if" << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: missing expression after @if" << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "if", "missing expression after @if");
             }
             return 1;
         }
@@ -574,13 +608,13 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
         catch (const std::exception &ex)
         {
             state.conditionStack.push_back(false);
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "if", ex.what());
+                std::cerr << RED << "Error: " << ex.what() << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: " << ex.what() << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "if", ex.what());
             }
             return 1;
         }
@@ -589,13 +623,13 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     {
         if (state.conditionStack.empty())
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "endif", "@endif without matching @if");
+                std::cerr << RED << "Error: @endif without matching @if." << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: @endif without matching @if." << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "endif", "@endif without matching @if");
             }
             return 1;
         }
@@ -603,13 +637,13 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
         return 0;
     }
 
-    if (outputFormat == OutputFormat::Json)
+    if (outputFormat == OutputFormat::Text)
     {
-        printJsonError(std::cerr, "batch", "unsupported command: " + flag);
+        std::cerr << RED << "Error: unsupported command: " << flag << RESET << '\n';
     }
     else
     {
-        std::cerr << RED << "Error: unsupported command: " << flag << RESET << '\n';
+        printStructuredError(std::cerr, outputFormat, "batch", "unsupported command: " + flag);
     }
     state.lastResult.reset();
     return 1;
@@ -620,13 +654,13 @@ int processBatchFile(const std::string &path, OutputFormat outputFormat, BatchSt
 {
     if (!hasTxtExtension(path))
     {
-        if (outputFormat == OutputFormat::Json)
+        if (outputFormat == OutputFormat::Text)
         {
-            printJsonError(std::cerr, "batch", "batch processing expects a .txt file");
+            std::cerr << RED << "Error: batch processing expects a .txt file." << RESET << '\n';
         }
         else
         {
-            std::cerr << RED << "Error: batch processing expects a .txt file." << RESET << '\n';
+            printStructuredError(std::cerr, outputFormat, "batch", "batch processing expects a .txt file");
         }
         return 1;
     }
@@ -634,13 +668,13 @@ int processBatchFile(const std::string &path, OutputFormat outputFormat, BatchSt
     std::ifstream input(path);
     if (!input)
     {
-        if (outputFormat == OutputFormat::Json)
+        if (outputFormat == OutputFormat::Text)
         {
-            printJsonError(std::cerr, "batch", "unable to open batch file: " + path);
+            std::cerr << RED << "Error: unable to open batch file: " << path << RESET << '\n';
         }
         else
         {
-            std::cerr << RED << "Error: unable to open batch file: " << path << RESET << '\n';
+            printStructuredError(std::cerr, outputFormat, "batch", "unable to open batch file: " + path);
         }
         return 1;
     }
@@ -668,13 +702,13 @@ int processBatchFile(const std::string &path, OutputFormat outputFormat, BatchSt
         std::string normalized = normalizeBatchFlag(tokens[0]);
         if (normalized.empty())
         {
-            if (outputFormat == OutputFormat::Json)
+            if (outputFormat == OutputFormat::Text)
             {
-                printJsonError(std::cerr, "batch", "unsupported command: " + tokens[0]);
+                std::cerr << RED << "Error: unsupported command: " << tokens[0] << RESET << '\n';
             }
             else
             {
-                std::cerr << RED << "Error: unsupported command: " << tokens[0] << RESET << '\n';
+                printStructuredError(std::cerr, outputFormat, "batch", "unsupported command: " + tokens[0]);
             }
             anyFailure = true;
             continue;
