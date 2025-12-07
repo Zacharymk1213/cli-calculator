@@ -39,7 +39,7 @@ jobs:
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build project
-        run: cmake --build build --config Release -- -j
+        run: cmake --build build --config Release
 
       - name: Package build
         run: |
