@@ -2,44 +2,68 @@ name: C++ CI Build & Draft Release
 
 on:
   push:
-    branches: main
+    branches: [main]
   pull_request:
-    branches: main
+    branches: [main]
 
 jobs:
   build:
-    name: Build and upload artifacts
-    runs-on: ubuntu-latest
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-dept: 0
+          fetch-depth: 0
 
-      - name: Install dependencies
+      # ---- Linux deps ----
+      - name: Install dependencies (Linux)
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake g++ make zip
+
+      # ---- Windows deps ----
+      - name: Install dependencies (Windows)
+        if: startsWith(matrix.os, 'windows')
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+        shell: powershell
 
       - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build project
-        run: cmake --build build --config Release -- -j$(nproc)
+        run: cmake --build build --config Release -- -j
 
       - name: Package build
         run: |
           cd build
-          zip -r ../cli-calculator-build.zip .
+          zip -r ../cli-calculator-${{ matrix.os }}.zip .
         shell: bash
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cli-calculator-build
-          path: build/
+          name: cli-calculator-${{ matrix.os }}
+          path: cli-calculator-${{ matrix.os }}.zip
           retention-days: 7
+
+  release:
+    name: Create draft release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
 
       - name: Create draft release
         uses: softprops/action-gh-release@v2
@@ -47,11 +71,10 @@ jobs:
           draft: true
           tag_name: v${{ github.run_number }}
           name: "CLI Calculator build #${{ github.run_number }}"
-          files: cli-calculator-build.zip
+          files: artifacts/**/*
           body: |
-            ⚙️ Automated draft release for CLI Calculator.
-
-            - Build type: Release
+            ⚙️ Automated multi-platform draft release for CLI Calculator.
+            - OS builds: Linux + Windows
             - Triggered by: ${{ github.actor }}
             - Commit: ${{ github.sha }}
         env:
