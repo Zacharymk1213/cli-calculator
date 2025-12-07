@@ -106,6 +106,7 @@ cmake --build build --config Release
 
 - `--no-color` / `-nc`: disable ANSI colors in all outputs.
 - `--eval <expression>` / `-e <expression>`: evaluate and print the result, then exit.
+- `--repl`: launch a lightweight read-eval-print loop for quick calculations (supports `:history`, `!<n>`, Up/Down-arrow history like Bash, and every CLI flag via `:command`/`--command` inside the session). You can also launch it from the interactive main menu via **9) Launch REPL mode**.
 - `--square-root <value>` / `-sqrt <value>`: compute a single square root (fails for negative inputs).
 - `--convert <from> <to> <value>` / `-c <from> <to> <value>`: convert an integer from one base to another and print the result. Accepted bases are `2`, `10` and `16`.
 - `--prime-factorization <value>` / `-pf <value>`: display the prime factors of the given integer (falls back to `-1` for negatives).
@@ -133,6 +134,14 @@ All numeric CLI arguments (square root inputs, divisor targets, conversion bases
 - The number-base menu accepts numbers prefixed with `0b` or `0x`.
 - Trigonometric/logarithmic functions expect radians and must be written with parentheses (e.g. `sin(0.5)`).
 
+### REPL shortcuts
+
+- Start it either with the `--repl` flag or by selecting **9) Launch REPL mode** from the interactive main menu.
+- Press the Up/Down arrows (on POSIX terminals) to navigate command history, similar to Bash.
+- Use `:history` to print the stored commands and `!<n>` to rerun the nth entry.
+- Every CLI flag is available inside the REPL via `:command` or `--command`, so `:convert`, `--divisors`, `:batch`, etc., behave the same as their one-shot counterparts.
+- `:cli-help`/`--help` prints the full CLI help text, while `:help` focuses on REPL-only shortcuts.
+- Structured `--output` formats are intentionally disabled during REPL sessions to keep interactions conversational.
 
 ## Base conversion (CLI)
 

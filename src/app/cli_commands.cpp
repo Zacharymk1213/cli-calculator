@@ -1,5 +1,4 @@
 #include "cli_commands.hpp"
-
 #include "ansi_colors.hpp"
 #include "cli_numeric.hpp"
 #include "core/variables.hpp"
@@ -7,7 +6,6 @@
 #include "expression.hpp"
 #include "numeral_conversion.hpp"
 #include "prime_factors.hpp"
-
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -15,7 +13,7 @@
 #include <vector>
 
 #ifndef CLI_CALCULATOR_VERSION
-#define CLI_CALCULATOR_VERSION "0.1"
+#define CLI_CALCULATOR_VERSION "v1.4.0"
 #endif
 
 int runEval(const std::string &expression, OutputFormat outputFormat, std::optional<double> *lastResult)
@@ -506,6 +504,7 @@ int runHelp(OutputFormat outputFormat)
         "Usage: calculator [options]\n"
         "Options:\n"
         "  -e, --eval <expression>       Evaluate the given mathematical expression.\n"
+        "  --repl                        Start the interactive REPL with arrow-key history + CLI flag support.\n"
         "  -sqrt, --square-root <value>  Calculate the square root of the given value.\n"
         "  -d, --divisors <number>       Calculate and display the divisors of the given number.\n"
         "  -c, --convert <from> <to> <value>  Convert value from one base to another (bases: 2, 10, 16).\n"
@@ -523,6 +522,7 @@ int runHelp(OutputFormat outputFormat)
         std::cout << "Usage: calculator [options]\n";
         std::cout << "Options:\n";
         std::cout << "  -e, --eval <expression>       Evaluate the given mathematical expression.\n";
+        std::cout << "  --repl                        Start the interactive REPL with arrow-key history + CLI flag support.\n";
         std::cout << "  -sqrt, --square-root <value>  Calculate the square root of the given value.\n";
         std::cout << "  -d, --divisors <number>       Calculate and display the divisors of the given number.\n";
         std::cout << "  -c, --convert <from> <to> <value>  Convert value from one base to another (bases: 2, 10, 16).\n";

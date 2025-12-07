@@ -9,6 +9,7 @@
 #include "expression.hpp"
 #include "input.hpp"
 #include "numeral_conversion.hpp"
+#include "cli_repl.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -530,10 +531,11 @@ void runInteractiveCalculator()
         std::cout << YELLOW << " 6) " << RESET << CYAN << "Square root calculator" << RESET << '\n';
         std::cout << YELLOW << " 7) " << RESET << CYAN << "Variable manager" << RESET << '\n';
         std::cout << YELLOW << " 8) " << RESET << CYAN << "Prime factorization" << RESET << '\n';
-        std::cout << YELLOW << " 9) " << RESET << CYAN << "Report a bug" << RESET << '\n';
+        std::cout << YELLOW << " 9) " << RESET << CYAN << "Launch REPL mode" << RESET << '\n';
+        std::cout << YELLOW << "10) " << RESET << CYAN << "Report a bug" << RESET << '\n';
         std::cout << YELLOW << " 0) " << RESET << CYAN << "Exit" << RESET << '\n';
 
-        int choice = readMenuChoice(0, 9);
+        int choice = readMenuChoice(0, 10);
         switch (choice)
         {
         case 1:
@@ -561,6 +563,15 @@ void runInteractiveCalculator()
             handlePrimeFactorization();
             break;
         case 9:
+        {
+            int replResult = runRepl(OutputFormat::Text);
+            if (replResult != 0)
+            {
+                std::cout << YELLOW << "Exited REPL with status " << replResult << RESET << '\n';
+            }
+            break;
+        }
+        case 10:
             std::cout << CYAN << "Opened a browser to report a bug, if don't see it, please visit:" << RESET << '\n';
             std::system("xdg-open https://github.com/Benedek553/cli-calculator/issues");
             std::cout << BLUE << "https://github.com/Benedek553/cli-calculator/issues" << RESET << '\n';

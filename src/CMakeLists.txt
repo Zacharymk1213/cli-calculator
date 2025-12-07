@@ -17,6 +17,7 @@ set(APP_SOURCES
     app/cli_actions.cpp
     app/cli_batch.cpp
     app/cli_commands.cpp
+    app/cli_repl.cpp
     app/cli_numeric.cpp
     app/cli_output.cpp
     app/menu_handlers.cpp

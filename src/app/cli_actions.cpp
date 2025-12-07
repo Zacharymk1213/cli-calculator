@@ -3,6 +3,7 @@
 #include "cli_batch.hpp"
 #include "cli_commands.hpp"
 #include "cli_output.hpp"
+#include "cli_repl.hpp"
 #include <iostream>
 #include <string>
 
@@ -153,6 +154,15 @@ std::optional<int> handleCommandLine(int argc, char **argv)
         if (arg == "--help" || arg == "-h")
         {
             return runHelp(outputFormat);
+        }
+        if (arg == "--repl" || arg == "-r")
+        {
+            if (outputFormat != OutputFormat::Text)
+            {
+                printStructuredError(std::cerr, outputFormat, "repl", "REPL mode only supports plain-text output.");
+                return 1;
+            }
+            return runRepl(outputFormat);
         }
         if (arg == "--prime-factorization" || arg == "-pf")
         {
