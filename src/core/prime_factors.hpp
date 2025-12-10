@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include <utility>
+#include <vector>
 
 // Returns the prime factors of n as pairs of (prime, exponent).
 // Throws std::invalid_argument if n is less than or equal to zero.

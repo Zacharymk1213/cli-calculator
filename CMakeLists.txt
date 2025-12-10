@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(cli-calculator VERSION 1.4 LANGUAGES CXX)
+project(cli-calculator VERSION 1.5 LANGUAGES CXX)
 
 # Recommended: out-of-source builds
 set(CMAKE_CXX_STANDARD 17)

@@ -15,26 +15,26 @@ inline std::string MAGENTA = "\033[1;35m";
 inline std::string CYAN = "\033[1;36m";
 
 inline void setColorsEnabled(bool enabled) {
-	g_colors_enabled = enabled;
-	if (enabled) {
-		RESET = "\033[0m";
-		BOLD = "\033[1m";
-		UNDERLINE = "\033[4m";
-		RED = "\033[1;31m";
-		GREEN = "\033[1;32m";
-		YELLOW = "\033[1;33m";
-		BLUE = "\033[1;34m";
-		MAGENTA = "\033[1;35m";
-		CYAN = "\033[1;36m";
-	} else {
-		RESET.clear();
-		BOLD.clear();
-		UNDERLINE.clear();
-		RED.clear();
-		GREEN.clear();
-		YELLOW.clear();
-		BLUE.clear();
-		MAGENTA.clear();
-		CYAN.clear();
-	}
+  g_colors_enabled = enabled;
+  if (enabled) {
+    RESET = "\033[0m";
+    BOLD = "\033[1m";
+    UNDERLINE = "\033[4m";
+    RED = "\033[1;31m";
+    GREEN = "\033[1;32m";
+    YELLOW = "\033[1;33m";
+    BLUE = "\033[1;34m";
+    MAGENTA = "\033[1;35m";
+    CYAN = "\033[1;36m";
+  } else {
+    RESET.clear();
+    BOLD.clear();
+    UNDERLINE.clear();
+    RED.clear();
+    GREEN.clear();
+    YELLOW.clear();
+    BLUE.clear();
+    MAGENTA.clear();
+    CYAN.clear();
+  }
 }

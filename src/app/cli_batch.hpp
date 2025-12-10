@@ -6,10 +6,11 @@
 #include <string>
 #include <vector>
 
-struct BatchState
-{
-    std::optional<double> lastResult;
-    std::vector<bool> conditionStack;
+struct BatchState {
+  std::optional<double> lastResult;
+  std::vector<bool> conditionStack;
 };
 
-int processBatchFile(const std::string &path, OutputFormat outputFormat, BatchState &state);
+int processBatchFile(const std::string &path, OutputFormat outputFormat,
+                     BatchState &state);
+int processBatchFileInteractive(OutputFormat outputFormat, BatchState &state);
