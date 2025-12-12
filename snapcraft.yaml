@@ -1,7 +1,7 @@
 name: cli-calculator
 title: CLI Calculator
 base: core22
-version: '1.5'
+version: '1.5.1'
 license: Apache-2.0
 source-code:
   - https://github.com/Benedek553/cli-calculator
