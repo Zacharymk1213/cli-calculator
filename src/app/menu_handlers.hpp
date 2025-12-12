@@ -9,4 +9,6 @@ void handleMatrixOperations();
 void handleSquareRoot();
 void handlePrimeFactorization();
 void handleVariables();
+void handleStatistics();
+void handleGraphUtility();
 void runInteractiveCalculator();

@@ -1,7 +1,7 @@
 name: cli-calculator
 title: CLI Calculator
 base: core22
-version: '1.3.3'
+version: '1.5.1'
 license: Apache-2.0
 source-code:
   - https://github.com/Benedek553/cli-calculator
@@ -10,58 +10,31 @@ issues:
 summary: Simple CLI calculator
 icon: icon.png
 description: |
-  A lightweight, fast, and reliable command-line calculator designed for developers, power users, and anyone who needs precise expression evaluation directly from the terminal.
+  CLI Calculator is a lightweight yet full-featured command-line toolkit that lets you evaluate expressions, convert number bases, solve equations, work with matrices, and inspect divisors without ever leaving the terminal. It targets developers, power users, and anyone who appreciates deterministic C++ utilities.
 
-  **Key Features**
+  **Highlights**
 
-  * **Advanced Expression Evaluation**
+  * Evaluate arbitrarily long expressions with `+ - * / x :`, parentheses, factorial, and built-in math functions such as `sin`, `cos`, `log`, `sqrt`, `tan`, `exp`, and `sinh`
+  * Convert signed integers between binary (`0b`), decimal, and hexadecimal (`0x`) inputs or outputs in one command
+  * Solve linear (`a * x + b = 0`) and quadratic (`a * x^2 + b * x + c = 0`) equations, including complex roots, with guided prompts
+  * Run matrix workflows (add, subtract, multiply) for arbitrarily sized matrices with validation before each operation
+  * Perform prime factorization and divisor lookups optimized for large integers
+  * Inspect or edit persisted variables (`vars.toml`) so you can reuse values in future sessions or in scripts
 
-    * Supports `+`, `-`, `*`, `/`, `x`, `:` operators
-    * Parentheses and nested expressions
-    * Built-in functions: `sin`, `cos`, `log`, `sqrt`
-    * Factorial operator `!`
-    * Floating‑point precision
+  **CLI workflows**
 
-  * **Universal Number Base Conversion**
+  * `cli-calculator` launches the interactive menu (matrix tools, equation solver, prime factorization, divisors, variable manager, etc.)
+  * `cli-calculator --repl` opens an instant read–eval–print loop with history (`:history`, `!<n>`) and autocompletion-like shortcuts
+  * `cli-calculator --eval "2*(3+5)"` evaluates expressions headlessly; combine with `--output json|yaml|xml` for script-friendly responses
+  * `cli-calculator --convert 10 16 42`, `--divisors 120`, `--prime-factorization 32768`, and `--square-root 625` provide single-shot utilities without entering the menu
+  * `cli-calculator --batch tasks.txt` executes a list of commands with helper directives (`@set`, `@input`, `@include`, `@if`, `@unset`) so you can automate repetitive calculations
 
-    * Understands binary (`0b`), decimal, and hexadecimal (`0x`) prefixes
-    * Automatically converts between bases
-    * Sign support included
+  **Usage tips**
 
-  * **Equation Solver**
-
-    * Linear equations: `a * x + b = 0`
-    * Quadratic equations: `a * x^2 + b * x + c = 0`
-    * Real, double, and complex root handling
-  * **Matrix Operations**
-
-    * Addition, subtraction, multiplication
-    * Determinant and inverse calculation
-    * Supports matrices of arbitrary size
-
-  * **Prime Factorization**
-
-    * Efficiently computes prime factors of integers
-    * Handles large numbers with optimized algorithms
-
-  * **Utility Tools**
-
-    * Divisor calculator
-    * Error‑resistant input parser
-
-  **Why Use CLI Calculator?**
-
-  * Terminal‑native, minimalistic design
-  * No unnecessary dependencies
-  * Extremely fast build and execution
-  * Ideal for developers working in C++, Linux, containers, or minimal environments
-  * Supports scripting and automation
-
-  **Usage**
-
-  `cli-calculator`
-
-  Then follow the interactive prompt.
+  * Variables and batch directives let you reuse previous results; numerical CLI flags accept variable names as arguments
+  * `--variables` (or `--list-variables`) prints the persisted values, and `--version` reports the build without launching the UI
+  * ANSI colors are enabled by default; disable them with `--no-color`
+  * Works great inside scripts, containers, CI pipelines, or minimal environments—there are no runtime dependencies beyond libstdc++
 grade: stable
 confinement: strict
 

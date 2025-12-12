@@ -10,6 +10,7 @@ Simple C++ project providing two command-line tools:
 - `calculator`: a full CLI calculator that
   - can read expressions of arbitrary length (e.g. `2 x 4 : 16 + (3-1)`),
   - can convert between number bases (binary, decimal, hexadecimal),
+  - can convert between common measurement units (length, mass, volume, temperature),
   - supports matrix addition, subtraction, and multiplication from the interactive menu,
   - includes an integrated divisors-finder,
   - offers a prime-factorization workflow that also stores the original number as a variable for later use,
@@ -79,10 +80,13 @@ cmake --build build --config Release
 | ------------------------ | ----------- |
 | Expression evaluation    | Complex expressions with `+ - * / x :` operators, parentheses, `sin`, `cos`, `log`, and factorial (`!`). Supports floating-point operations and user-defined variables read from `vars.toml`. |
 | Number-base conversion   | Accepts binary (`0b`), decimal, and hexadecimal (`0x`) inputs and converts between them; sign handling included. |
+| Measurement conversions  | Converts between common units of length, mass, volume, and temperature directly from the Conversion Tools menu. |
 | Equation solver          | Solves linear (`a * x + b = 0`) and quadratic (`a * x^2 + b * x + c = 0`) equations, including complex roots. |
 | Matrix operations        | Adds, subtracts, or multiplies matrices of arbitrary size with guided prompts that validate dimensions before computing. |
 | Divisor search           | Produces a sorted list of positive divisors for any integer (except 0). |
 | Prime factorization      | Breaks positive integers into their prime powers, displays them in readable form (optionally starting with `-1` for negatives), and stores the factored integer in the `prime_factorization` variable. |
+| Statistical analysis     | Accepts datasets directly from the menu to calculate min/max, mean, median, variance, standard deviation, percentiles, and modes. |
+| Graph utility            | Converts a numeric dataset into an ASCII chart with adjustable height to visualize trends directly in the terminal. |
 | Variable inspection      | `--variables` lists persisted variable names and values without opening the interactive menu. |
 | Variable persistence     | Menu option 7 lets you list/set/delete variables that are persisted in `vars.toml` and reused in subsequent evaluations. |
 
@@ -97,7 +101,7 @@ cmake --build build --config Release
   - `divisors_lib.*`: shared divisor calculation used by both executables.
 - `src/app/` application layer:
   - `cli_actions.*`: one-shot flag handling for `--eval`, `--convert`, `--divisors`, `--square-root`.
-  - `menu_handlers.*`: interactive menu flows for arithmetic, conversions, divisors, equations, matrix operations, prime factorization, and square roots.
+- `menu_handlers.*`: interactive menu flows for arithmetic, conversions, divisors, equations, matrix operations, prime factorization, statistics, graphing, and square roots.
 - `src/main.cpp`: boots CLI colors, dispatches CLI flags, and runs the interactive menu.
 - `src/tools/divisors.cpp`: standalone divisors CLI entry point.
 - `src/ansi_colors.hpp`: shared ANSI color helpers (included by both apps).
@@ -106,7 +110,7 @@ cmake --build build --config Release
 
 - `--no-color` / `-nc`: disable ANSI colors in all outputs.
 - `--eval <expression>` / `-e <expression>`: evaluate and print the result, then exit.
-- `--repl`: launch a lightweight read-eval-print loop for quick calculations (supports `:history`, `!<n>`, Up/Down-arrow history like Bash, and every CLI flag via `:command`/`--command` inside the session). You can also launch it from the interactive main menu via **9) Launch REPL mode**.
+- `--repl`: launch a lightweight read-eval-print loop for quick calculations (supports `:history`, `!<n>`, Up/Down-arrow history like Bash, and every CLI flag via `:command`/`--command` inside the session). You can also launch it from the interactive main menu via **11) Launch REPL mode**.
 - `--square-root <value>` / `-sqrt <value>`: compute a single square root (fails for negative inputs).
 - `--convert <from> <to> <value>` / `-c <from> <to> <value>`: convert an integer from one base to another and print the result. Accepted bases are `2`, `10` and `16`.
 - `--prime-factorization <value>` / `-pf <value>`: display the prime factors of the given integer (falls back to `-1` for negatives).
@@ -136,7 +140,7 @@ All numeric CLI arguments (square root inputs, divisor targets, conversion bases
 
 ### REPL shortcuts
 
-- Start it either with the `--repl` flag or by selecting **9) Launch REPL mode** from the interactive main menu.
+- Start it either with the `--repl` flag or by selecting **11) Launch REPL mode** from the interactive main menu.
 - Press the Up/Down arrows (on POSIX terminals) to navigate command history, similar to Bash.
 - Use `:history` to print the stored commands and `!<n>` to rerun the nth entry.
 - Every CLI flag is available inside the REPL via `:command` or `--command`, so `:convert`, `--divisors`, `:batch`, etc., behave the same as their one-shot counterparts.
