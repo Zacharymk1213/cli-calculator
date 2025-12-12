@@ -10,6 +10,7 @@ set(CORE_SOURCES
     core/math_utils.cpp
     core/numeral_conversion.cpp
     core/matrix.cpp
+    core/statistics.cpp
 )
 
 set(APP_SOURCES
