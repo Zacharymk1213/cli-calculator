@@ -16,6 +16,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstddef>
+#include <cstdlib>
 #include <exception>
 #include <iomanip>
 #include <iostream>
@@ -846,6 +847,15 @@ void handleGraphUtility() {
   }
 }
 
+void open_url(const std::string &url) {
+  int ret = std::system("command -v snapctl >/dev/null 2>&1");
+  if (ret == 0) {
+    std::system(("snapctl user-open " + url).c_str());
+  } else {
+    std::system(("xdg-open " + url).c_str());
+  }
+}
+
 void runInteractiveCalculator() {
   while (true) {
     std::cout << '\n'
@@ -917,14 +927,9 @@ void runInteractiveCalculator() {
       break;
     }
     case 12:
-      std::cout
-          << CYAN
-          << "Opened a browser to report a bug, if don't see it, please visit:"
-          << RESET << '\n';
-      std::system(
-          "xdg-open https://github.com/Benedek553/cli-calculator/issues");
-      std::cout << BLUE << "https://github.com/Benedek553/cli-calculator/issues"
-                << RESET << '\n';
+      std::cout << BLUE << "Opened a browser to report a bug." << RESET << '\n';
+      open_url("https://github.com/Benedek553/cli-calculator/issues/"
+               "new?template=bug_report.yml");
       break;
     case 0:
       std::cout << BOLD << GREEN << "Goodbye!" << RESET << '\n';
