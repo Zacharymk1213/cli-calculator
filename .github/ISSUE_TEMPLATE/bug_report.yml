@@ -12,15 +12,6 @@ body:
         Please fill out the following fields carefully so we can reproduce and fix the issue quickly.
 
   - type: input
-    id: title
-    attributes:
-      label: 🏷️ Issue title
-      description: Provide a short, clear title for the bug.
-      placeholder: e.g. Division by zero causes segmentation fault
-    validations:
-      required: true
-
-  - type: input
     id: version
     attributes:
       label: 🔢 Application version
@@ -83,4 +74,4 @@ body:
     attributes:
       label: ✅ Confirmations
       options:
-        - label: I have searched for similar issues before opening thi
+        - label: I have searched for similar issues before opening this

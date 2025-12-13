@@ -1,0 +1,42 @@
+name: Feature Request
+description: Suggest a new feature for the CLI Calculator project
+labels: ["enhancement", "triage"]
+assignees:
+  - Benedek553
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a new feature for **CLI Calculator**!  
+        Please fill out the following fields carefully so we can understand and implement your idea effectively.
+  - type: textarea
+    id: feature_description
+    attributes:
+      label: Description of the feature
+      description: Provide a concise description for the feature you are requesting.
+      placeholder: e.g. "Add support for complex numbers"
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Explain why this feature would be useful or important.
+      placeholder: e.g. "Complex numbers are essential for engineering calculations."
+    validations:
+      required: true
+  - type: textarea
+    id: implementation_ideas
+    attributes:
+      label: Implementation ideas
+      description: Share any ideas you have on how this feature could be implemented.
+      placeholder: e.g. "We could add a new class to handle complex arithmetic."
+  - type: checkboxes
+    id: checkboxes
+    attributes:
+      label: ✅ Confirmations
+      options:
+        - label: I have searched for similar issues before opening this.
+    validations:
+      required: true
