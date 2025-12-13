@@ -43,8 +43,26 @@ Run the calculator:
 ```bash
 cli-calculator
 ```
+## Option 2: Install with APT
 
-### Option 2: Download the Latest Release (Manual Installation)
+1. Download signing key:
+```bash
+curl -fsSL https://clicalculator.blob.core.windows.net/repo/clicalc.gpg \
+| sudo gpg --dearmor -o /usr/share/keyrings/clicalc.gpg
+```
+2. Add the repo:
+```bash
+echo "deb [signed-by=/usr/share/keyrings/clicalc.gpg] \
+https://clicalculator.blob.core.windows.net/repo stable main" \
+| sudo tee /etc/apt/sources.list.d/clicalc.list
+
+sudo apt update
+```
+3. Install package:
+```bash
+sudo apt install cli-calculator -y
+```
+### Option 3: Download the Latest Release (Manual Installation)
 
 1. Download the latest prebuilt binary from the **Releases** page.
 2. Make it executable:
