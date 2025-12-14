@@ -47,8 +47,22 @@ target_link_libraries(calculator PRIVATE calculator_core)
 target_compile_definitions(divisors PRIVATE CLI_CALCULATOR_VERSION="${PROJECT_VERSION}")
 target_compile_definitions(calculator PRIVATE CLI_CALCULATOR_VERSION="${PROJECT_VERSION}")
 
+install(TARGETS calculator
+    RUNTIME DESTINATION bin
+)
+
 if(MSVC)
   target_compile_options(divisors PRIVATE /W4)
   target_compile_options(calculator PRIVATE /W4)
 endif()
 enable_testing()
+
+set(CPACK_PACKAGE_NAME "cli-calculator")
+set(CPACK_PACKAGE_VERSION "1.5.1")
+set(CPACK_GENERATOR "DEB")
+
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Farsang Benedek")
+set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
+set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Simple command-line calculator, written in C++")
+
+include(CPack)
