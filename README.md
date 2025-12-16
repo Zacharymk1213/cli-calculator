@@ -56,6 +56,7 @@ cli-calculator
 
 - CMake 3.10+
 - Any C++17-compatible compiler (GCC, Clang, MSVC)
+- zlib development headers and library (for PNG graph export)
 
 ## Build (out-of-source)
 
@@ -86,7 +87,7 @@ cmake --build build --config Release
 | Divisor search           | Produces a sorted list of positive divisors for any integer (except 0). |
 | Prime factorization      | Breaks positive integers into their prime powers, displays them in readable form (optionally starting with `-1` for negatives), and stores the factored integer in the `prime_factorization` variable. |
 | Statistical analysis     | Accepts datasets directly from the menu to calculate min/max, mean, median, variance, standard deviation, percentiles, and modes. |
-| Graph utility            | Converts a numeric dataset into an ASCII chart with adjustable height to visualize trends directly in the terminal. |
+| Graph utility            | Imports values manually or from CSV, previews the series as ASCII, then writes a labeled PNG plot for sharing. |
 | Variable inspection      | `--variables` lists persisted variable names and values without opening the interactive menu. |
 | Variable persistence     | Menu option 7 lets you list/set/delete variables that are persisted in `vars.toml` and reused in subsequent evaluations. |
 
@@ -137,6 +138,18 @@ All numeric CLI arguments (square root inputs, divisor targets, conversion bases
 - The `x` and `:` symbols are interpreted as multiplication and division, respectively, to match common Hungarian input conventions.
 - The number-base menu accepts numbers prefixed with `0b` or `0x`.
 - Trigonometric/logarithmic functions expect radians and must be written with parentheses (e.g. `sin(0.5)`).
+
+## Graph utility workflow
+
+1. Launch **10) Graph utility** from the main menu.
+2. Choose whether you want to enter values manually or load them from a CSV file.
+   - *Manual*: paste or type a whitespace- or comma-separated list of numbers. Enter `back` to cancel.
+   - *CSV*: provide the file path, confirm whether the first row holds headers, then pick the column either by name or index. Empty or invalid entries are skipped with a short summary.
+3. Pick the ASCII preview height (2–20). This uses the existing terminal renderer so you can sanity-check your dataset before exporting.
+4. Provide an output filename (defaults to `graph.png`). If you omit `.png`, it is appended automatically.
+5. The tool writes a 600×400+ pixel PNG that includes grid lines, labeled axes, and red data points connected by blue line segments to make the exported chart easier to interpret at a glance.
+
+PNG exports rely on zlib; make sure the development package is available if you build from source.
 
 ### REPL shortcuts
 

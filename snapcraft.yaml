@@ -1,7 +1,7 @@
 name: cli-calculator
 title: CLI Calculator
 base: core22
-version: '1.5.1'
+version: '1.6'
 license: Apache-2.0
 source-code:
   - https://github.com/Benedek553/cli-calculator
@@ -18,6 +18,7 @@ description: |
   * Convert signed integers between binary (`0b`), decimal, and hexadecimal (`0x`) inputs or outputs in one command
   * Solve linear (`a * x + b = 0`) and quadratic (`a * x^2 + b * x + c = 0`) equations, including complex roots, with guided prompts
   * Run matrix workflows (add, subtract, multiply) for arbitrarily sized matrices with validation before each operation
+  * Visualize number series by entering them manually or loading CSV columns, previewing the ASCII graph, then exporting a labeled PNG chart
   * Perform prime factorization and divisor lookups optimized for large integers
   * Inspect or edit persisted variables (`vars.toml`) so you can reuse values in future sessions or in scripts
 
@@ -28,6 +29,7 @@ description: |
   * `cli-calculator --eval "2*(3+5)"` evaluates expressions headlessly; combine with `--output json|yaml|xml` for script-friendly responses
   * `cli-calculator --convert 10 16 42`, `--divisors 120`, `--prime-factorization 32768`, and `--square-root 625` provide single-shot utilities without entering the menu
   * `cli-calculator --batch tasks.txt` executes a list of commands with helper directives (`@set`, `@input`, `@include`, `@if`, `@unset`) so you can automate repetitive calculations
+  * Graph utility (menu option 10) walks you through picking manual/CSV data, ASCII preview height, and the PNG filename so you can share charts without leaving the terminal
 
   **Usage tips**
 
