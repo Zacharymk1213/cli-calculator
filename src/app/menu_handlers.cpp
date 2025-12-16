@@ -2,6 +2,7 @@
 
 #include "ansi_colors.hpp"
 #include "cli_repl.hpp"
+#include "core/graph_png.hpp"
 #include "core/matrix.hpp"
 #include "core/variables.hpp"
 #include "divisors.hpp"
@@ -18,6 +19,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <exception>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -35,6 +37,38 @@ std::string trim(const std::string &text) {
   }
   auto rbegin = std::find_if(text.rbegin(), text.rend(), notSpace);
   return {begin, rbegin.base()};
+}
+
+std::string toLowerCopy(std::string value) {
+  std::transform(value.begin(), value.end(), value.begin(),
+                 [](unsigned char ch) {
+                   return static_cast<char>(std::tolower(ch));
+                 });
+  return value;
+}
+
+std::vector<std::string> parseCsvLine(const std::string &line) {
+  std::vector<std::string> fields;
+  std::string field;
+  bool inQuotes = false;
+  for (std::size_t idx = 0; idx < line.size(); ++idx) {
+    char ch = line[idx];
+    if (ch == '"') {
+      if (inQuotes && idx + 1 < line.size() && line[idx + 1] == '"') {
+        field.push_back('"');
+        ++idx;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch == ',' && !inQuotes) {
+      fields.push_back(field);
+      field.clear();
+    } else {
+      field.push_back(ch);
+    }
+  }
+  fields.push_back(field);
+  return fields;
 }
 
 int chooseBase(const std::string &label) {
@@ -190,6 +224,228 @@ bool parseNumberList(const std::string &input, std::vector<double> &values,
     return false;
   }
   return true;
+}
+
+bool promptManualGraphValues(std::vector<double> &values) {
+  while (true) {
+    std::string input =
+        readLine("Enter numbers separated by spaces (type 'back' to cancel): ");
+    std::string lowered = toLowerCopy(trim(input));
+    if (lowered == "back") {
+      return false;
+    }
+
+    std::string error;
+    if (!parseNumberList(input, values, error)) {
+      std::cout << RED << "Error: " << RESET << error << '\n';
+      continue;
+    }
+    return true;
+  }
+}
+
+std::size_t promptAsciiGraphHeight() {
+  while (true) {
+    std::string heightInput = trim(readLine(
+        "ASCII preview height 2-20 (press Enter for default 10): "));
+    if (heightInput.empty()) {
+      return 10;
+    }
+    try {
+      long long parsed = std::stoll(heightInput);
+      if (parsed < 2 || parsed > 20) {
+        std::cout << YELLOW << "Please choose a value between 2 and 20."
+                  << RESET << '\n';
+        continue;
+      }
+      return static_cast<std::size_t>(parsed);
+    } catch (const std::exception &) {
+      std::cout << RED
+                << "Invalid height. Please provide a whole number between 2 "
+                   "and 20 or leave it empty."
+                << RESET << '\n';
+    }
+  }
+}
+
+bool promptCsvGraphValues(std::vector<double> &values) {
+  while (true) {
+    std::string path =
+        trim(readLine("Path to CSV file (type 'back' to cancel): "));
+    if (path.empty()) {
+      std::cout << YELLOW << "Please provide a path to a CSV file." << RESET
+                << '\n';
+      continue;
+    }
+    if (toLowerCopy(path) == "back") {
+      return false;
+    }
+
+    std::ifstream input(path);
+    if (!input) {
+      std::cout << RED << "Unable to open '" << path << "'." << RESET << '\n';
+      continue;
+    }
+
+    bool hasHeaders = true;
+    while (true) {
+      std::string response = trim(
+          readLine("Does the first row contain headers? (y/n, default y): "));
+      if (response.empty()) {
+        break;
+      }
+      char answer =
+          static_cast<char>(std::tolower(static_cast<unsigned char>(response[0])));
+      if (answer == 'y') {
+        hasHeaders = true;
+        break;
+      }
+      if (answer == 'n') {
+        hasHeaders = false;
+        break;
+      }
+      std::cout << YELLOW << "Please answer with 'y' or 'n'." << RESET << '\n';
+    }
+
+    std::vector<std::vector<std::string>> rows;
+    std::string line;
+    while (std::getline(input, line)) {
+      if (!line.empty() && line.back() == '\r') {
+        line.pop_back();
+      }
+      rows.push_back(parseCsvLine(line));
+    }
+    if (rows.empty()) {
+      std::cout << YELLOW << "The file appears to be empty." << RESET << '\n';
+      continue;
+    }
+
+    std::vector<std::string> headers;
+    std::size_t dataStartIndex = 0;
+    if (hasHeaders) {
+      headers = rows.front();
+      dataStartIndex = 1;
+      if (headers.empty()) {
+        std::cout << YELLOW << "The header row does not contain any columns."
+                  << RESET << '\n';
+        continue;
+      }
+      for (std::size_t idx = 0; idx < headers.size(); ++idx) {
+        if (trim(headers[idx]).empty()) {
+          std::ostringstream fallback;
+          fallback << "Column " << (idx + 1);
+          headers[idx] = fallback.str();
+        }
+      }
+    } else {
+      if (rows.front().empty()) {
+        std::cout << YELLOW
+                  << "Unable to determine the number of columns from the first "
+                     "row."
+                  << RESET << '\n';
+        continue;
+      }
+      headers.resize(rows.front().size());
+      for (std::size_t idx = 0; idx < rows.front().size(); ++idx) {
+        std::ostringstream fallback;
+        fallback << "Column " << (idx + 1);
+        headers[idx] = fallback.str();
+      }
+    }
+
+    std::cout << GREEN << "Available columns:" << RESET << '\n';
+    for (std::size_t idx = 0; idx < headers.size(); ++idx) {
+      std::cout << "  " << (idx + 1) << ") " << headers[idx] << '\n';
+    }
+
+    std::size_t columnIndex = 0;
+    while (true) {
+      std::string selection = trim(readLine(
+          "Select column by number or name (type 'back' to cancel): "));
+      if (selection.empty()) {
+        std::cout << YELLOW << "Please provide a column selection." << RESET
+                  << '\n';
+        continue;
+      }
+      std::string lowered = toLowerCopy(selection);
+      if (lowered == "back") {
+        return false;
+      }
+
+      bool matched = false;
+      try {
+        long long idx = std::stoll(selection);
+        if (idx >= 1 && static_cast<std::size_t>(idx) <= headers.size()) {
+          columnIndex = static_cast<std::size_t>(idx - 1);
+          matched = true;
+        }
+      } catch (const std::exception &) {
+      }
+      if (!matched) {
+        for (std::size_t idx = 0; idx < headers.size(); ++idx) {
+          if (toLowerCopy(headers[idx]) == lowered) {
+            columnIndex = idx;
+            matched = true;
+            break;
+          }
+        }
+      }
+      if (matched) {
+        break;
+      }
+      std::cout << RED << "Unable to match that selection to a column." << RESET
+                << '\n';
+    }
+
+    values.clear();
+    std::size_t skippedMissing = 0;
+    std::size_t skippedInvalid = 0;
+    for (std::size_t idx = dataStartIndex; idx < rows.size(); ++idx) {
+      if (columnIndex >= rows[idx].size()) {
+        ++skippedMissing;
+        continue;
+      }
+      std::string cell = trim(rows[idx][columnIndex]);
+      if (cell.empty()) {
+        ++skippedMissing;
+        continue;
+      }
+      try {
+        std::size_t processed = 0;
+        double parsed = std::stod(cell, &processed);
+        if (processed != cell.size()) {
+          ++skippedInvalid;
+          continue;
+        }
+        values.push_back(parsed);
+      } catch (const std::exception &) {
+        ++skippedInvalid;
+      }
+    }
+
+    if (values.empty()) {
+      std::cout << RED
+                << "No numeric rows were found in the selected column."
+                << RESET << '\n';
+      continue;
+    }
+
+    if (skippedMissing > 0 || skippedInvalid > 0) {
+      std::cout << YELLOW << "Skipped " << skippedMissing
+                << " row(s) with missing values and " << skippedInvalid
+                << " row(s) with invalid numbers." << RESET << '\n';
+    }
+    return true;
+  }
+}
+
+std::string ensurePngExtension(std::string path) {
+  std::string lowered = toLowerCopy(path);
+  if (lowered.size() < 4 ||
+      lowered.substr(lowered.size() - 4) != ".png") {
+    path += ".png";
+  }
+  return path;
 }
 
 struct LinearUnit {
@@ -795,50 +1051,48 @@ void handleGraphUtility() {
   while (true) {
     std::cout << '\n'
               << UNDERLINE << CYAN << "--- Graph Utility ---" << RESET << '\n';
-    std::string input =
-        readLine("Enter numbers separated by spaces (type 'back' to return): ");
-    std::string lowered = trim(input);
-    std::transform(
-        lowered.begin(), lowered.end(), lowered.begin(),
-        [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
-    if (lowered == "back") {
+    std::cout << YELLOW << " 1) " << RESET << CYAN << "Enter values manually"
+              << RESET << '\n';
+    std::cout << YELLOW << " 2) " << RESET << CYAN << "Load values from CSV"
+              << RESET << '\n';
+    std::cout << YELLOW << " 0) " << RESET << CYAN << "Back" << RESET << '\n';
+
+    int choice = readMenuChoice(0, 2);
+    if (choice == 0) {
       return;
     }
 
     std::vector<double> values;
-    std::string error;
-    if (!parseNumberList(input, values, error)) {
-      std::cout << RED << "Error: " << RESET << error << '\n';
+    bool haveValues = false;
+    if (choice == 1) {
+      haveValues = promptManualGraphValues(values);
+    } else if (choice == 2) {
+      haveValues = promptCsvGraphValues(values);
+    }
+    if (!haveValues) {
       continue;
     }
 
-    std::size_t height = 10;
-    while (true) {
-      std::string heightInput =
-          trim(readLine("Graph height 2-20 (press Enter for default 10): "));
-      if (heightInput.empty()) {
-        height = 10;
-        break;
-      }
-      try {
-        long long parsed = std::stoll(heightInput);
-        if (parsed < 2 || parsed > 20) {
-          std::cout << YELLOW << "Please choose a value between 2 and 20."
-                    << RESET << '\n';
-          continue;
-        }
-        height = static_cast<std::size_t>(parsed);
-        break;
-      } catch (const std::exception &) {
-        std::cout << RED << "Invalid height. Please enter an integer between 2 "
-                  << "and 20 or leave it blank." << RESET << '\n';
-      }
-    }
-
+    std::size_t height = promptAsciiGraphHeight();
     auto graphLines = buildAsciiGraph(values, height);
-    std::cout << GREEN << "ASCII graph:" << RESET << '\n';
+    std::cout << GREEN << "ASCII preview:" << RESET << '\n';
     for (const auto &line : graphLines) {
       std::cout << line << '\n';
+    }
+
+    std::string outputPath =
+        trim(readLine("Enter output PNG filename (default graph.png): "));
+    if (outputPath.empty()) {
+      outputPath = "graph.png";
+    }
+    outputPath = ensurePngExtension(outputPath);
+
+    std::string error;
+    if (generateGraphPng(values, outputPath, error)) {
+      std::cout << GREEN << "Saved graph to '" << outputPath << "'." << RESET
+                << '\n';
+    } else {
+      std::cout << RED << "Failed to create PNG: " << RESET << error << '\n';
     }
 
     if (!askToContinue("Create another graph? (y/n): ")) {

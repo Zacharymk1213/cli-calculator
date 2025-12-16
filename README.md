@@ -122,19 +122,19 @@ sudo cmake --install build
 
 ## Features
 
-| Feature                 | Description                                                                                                                                                                               |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Expression evaluation   | Evaluates complex expressions with `+ - * / x :`, parentheses, `sin`, `cos`, `log`, and factorial (`!`). Supports floating-point math and persisted user-defined variables (`vars.toml`). |
-| Number-base conversion  | Converts between binary (`0b`), decimal, and hexadecimal (`0x`) representations with full sign handling.                                                                                  |
-| Measurement conversions | Converts common units of length, mass, volume, and temperature via a guided menu.                                                                                                         |
-| Equation solver         | Solves linear (`a·x + b = 0`) and quadratic (`a·x² + b·x + c = 0`) equations, including complex roots.                                                                                    |
-| Matrix operations       | Adds, subtracts, and multiplies matrices of arbitrary size with dimension validation.                                                                                                     |
-| Divisor search          | Computes and prints all positive divisors of an integer (except zero).                                                                                                                    |
-| Prime factorization     | Displays prime factors in readable form and stores the value in `prime_factorization`.                                                                                                    |
-| Statistics              | Computes min/max, mean, median, variance, standard deviation, percentiles, and modes.                                                                                                     |
-| Graph utility           | Renders numeric datasets as adjustable ASCII charts directly in the terminal.                                                                                                             |
-| Variable persistence    | Variables are stored in `vars.toml` and reused across runs.                                                                                                                               |
-| Variable inspection     | `--variables` lists all persisted variables without launching the interactive UI.                                                                                                         |
+| Feature                  | Description |
+| ------------------------ | ----------- |
+| Expression evaluation    | Complex expressions with `+ - * / x :` operators, parentheses, `sin`, `cos`, `log`, and factorial (`!`). Supports floating-point operations and user-defined variables read from `vars.toml`. |
+| Number-base conversion   | Accepts binary (`0b`), decimal, and hexadecimal (`0x`) inputs and converts between them; sign handling included. |
+| Measurement conversions  | Converts between common units of length, mass, volume, and temperature directly from the Conversion Tools menu. |
+| Equation solver          | Solves linear (`a * x + b = 0`) and quadratic (`a * x^2 + b * x + c = 0`) equations, including complex roots. |
+| Matrix operations        | Adds, subtracts, or multiplies matrices of arbitrary size with guided prompts that validate dimensions before computing. |
+| Divisor search           | Produces a sorted list of positive divisors for any integer (except 0). |
+| Prime factorization      | Breaks positive integers into their prime powers, displays them in readable form (optionally starting with `-1` for negatives), and stores the factored integer in the `prime_factorization` variable. |
+| Statistical analysis     | Accepts datasets directly from the menu to calculate min/max, mean, median, variance, standard deviation, percentiles, and modes. |
+| Graph utility            | Imports values manually or from CSV, previews the series as ASCII, then writes a labeled PNG plot for sharing. |
+| Variable inspection      | `--variables` lists persisted variable names and values without opening the interactive menu. |
+| Variable persistence     | Menu option 7 lets you list/set/delete variables that are persisted in `vars.toml` and reused in subsequent evaluations. |
 
 ---
 
@@ -193,7 +193,19 @@ All numeric arguments may reference previously defined variables. Structured out
 
 Multiplication and division may also be written as `x` and `:` to match common Hungarian input conventions.
 
----
+## Graph utility workflow
+
+1. Launch **10) Graph utility** from the main menu.
+2. Choose whether you want to enter values manually or load them from a CSV file.
+   - *Manual*: paste or type a whitespace- or comma-separated list of numbers. Enter `back` to cancel.
+   - *CSV*: provide the file path, confirm whether the first row holds headers, then pick the column either by name or index. Empty or invalid entries are skipped with a short summary.
+3. Pick the ASCII preview height (2–20). This uses the existing terminal renderer so you can sanity-check your dataset before exporting.
+4. Provide an output filename (defaults to `graph.png`). If you omit `.png`, it is appended automatically.
+5. The tool writes a 600×400+ pixel PNG that includes grid lines, labeled axes, and red data points connected by blue line segments to make the exported chart easier to interpret at a glance.
+
+PNG exports rely on zlib; make sure the development package is available if you build from source.
+
+### REPL shortcuts
 
 ## REPL Tips
 
