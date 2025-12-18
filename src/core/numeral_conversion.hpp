@@ -1,5 +1,4 @@
 #pragma once
-
 #include <string>
 
 // Converts a textual integer representation in the given base to a decimal

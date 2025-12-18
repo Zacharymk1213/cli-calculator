@@ -1,5 +1,4 @@
 #include "matrix.hpp"
-
 #include <stdexcept>
 
 namespace {

@@ -1,5 +1,4 @@
 #include "divisors.hpp"
-
 #include <algorithm>
 #include <stdexcept>
 #include <vector>

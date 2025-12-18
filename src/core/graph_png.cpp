@@ -1,5 +1,4 @@
 #include "graph_png.hpp"
-
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -12,7 +11,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
 #include <zlib.h>
 
 namespace {

@@ -1,8 +1,6 @@
 #include "equations.hpp"
-
 #include "ansi_colors.hpp"
 #include "math_utils.hpp"
-
 #include <complex>
 #include <iostream>
 

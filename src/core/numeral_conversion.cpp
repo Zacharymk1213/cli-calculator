@@ -1,5 +1,4 @@
 #include "numeral_conversion.hpp"
-
 #include <algorithm>
 #include <cctype>
 #include <stdexcept>
