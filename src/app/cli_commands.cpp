@@ -13,7 +13,7 @@
 #include <vector>
 
 #ifndef CLI_CALCULATOR_VERSION
-#define CLI_CALCULATOR_VERSION "v1.4.0"
+#define CLI_CALCULATOR_VERSION "1.6.0"
 #endif
 
 int runEval(const std::string &expression, OutputFormat outputFormat,

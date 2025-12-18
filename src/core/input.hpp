@@ -1,5 +1,4 @@
 #pragma once
-
 #include <string>
 
 // Common input helpers used by the interactive menus.

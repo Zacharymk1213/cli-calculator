@@ -1,5 +1,4 @@
 #include "statistics.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <iomanip>

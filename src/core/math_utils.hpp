@@ -1,5 +1,4 @@
 #pragma once
-
 #include <cmath>
 
 // Checks whether the given floating point value is close to zero.

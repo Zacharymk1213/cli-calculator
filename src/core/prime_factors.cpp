@@ -1,5 +1,4 @@
 #include "prime_factors.hpp"
-
 #include <stdexcept>
 
 std::vector<std::pair<long long, int>> calculatePrimeFactors(long long n) {

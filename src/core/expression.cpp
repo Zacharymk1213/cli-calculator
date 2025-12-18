@@ -1,7 +1,5 @@
 #include "expression.hpp"
-
 #include "math_utils.hpp"
-
 #include <algorithm>
 #include <cctype>
 #include <cmath>
