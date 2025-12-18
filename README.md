@@ -1,38 +1,28 @@
-# cli-calculator
-
 [![cli-calculator](https://snapcraft.io/cli-calculator/badge.svg)](https://snapcraft.io/cli-calculator)
 [![C++ CI Build & Draft Release](https://github.com/Benedek553/cli-calculator/actions/workflows/release.yml/badge.svg)](https://github.com/Benedek553/cli-calculator/actions/workflows/release.yml)
 [![CodeQL](https://github.com/Benedek553/cli-calculator/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/Benedek553/cli-calculator/actions/workflows/github-code-scanning/codeql)
 [![Lint](https://github.com/Benedek553/cli-calculator/actions/workflows/lint.yml/badge.svg)](https://github.com/Benedek553/cli-calculator/actions/workflows/lint.yml)
 [![pages-build-deployment](https://github.com/Benedek553/cli-calculator/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/Benedek553/cli-calculator/actions/workflows/pages/pages-build-deployment)
+# cli-calculator
 
-A simple but powerful C++ project that provides two command-line tools for everyday and advanced mathematical tasks.
+Simple C++ project providing two command-line tools:
 
----
-
-## Overview
-
-This project consists of two executables:
-
-* **`calculator`** – a full-featured interactive CLI calculator that:
-
-  * evaluates expressions of arbitrary length (e.g. `2 x 4 : 16 + (3 - 1)`),
-  * converts between number bases (binary, decimal, hexadecimal),
-  * converts between common measurement units (length, mass, volume, temperature),
-  * supports matrix addition, subtraction, and multiplication,
-  * includes an integrated divisor finder,
-  * performs prime factorization and stores the original number as a reusable variable,
-  * prints its version or lists persisted variables directly from the CLI without starting the menu.
-
-* **`divisors`** – a standalone utility that lists all positive divisors of an integer.
-
----
-
+- `calculator`: a full CLI calculator that
+  - can read expressions of arbitrary length (e.g. `2 x 4 : 16 + (3-1)`),
+  - can convert between number bases (binary, decimal, hexadecimal),
+  - can convert between common measurement units (length, mass, volume, temperature),
+  - supports matrix addition, subtraction, and multiplication from the interactive menu,
+  - includes an integrated divisors-finder,
+  - offers a prime-factorization workflow that also stores the original number as a variable for later use,
+  - prints its version without launching the menu, and can list persisted variables directly from the CLI.
+- `divisors`: a standalone program that lists the positive divisors of an integer.
 ## Quickstart
 
 [![Get it from the Snap Store](https://snapcraft.io/en/light/install.svg)](https://snapcraft.io/cli-calculator)
 
 ### Option 1: Install from the Snap Store
+
+Install the snap package directly:
 
 ```bash
 sudo snap install cli-calculator
@@ -43,84 +33,49 @@ Run the calculator:
 ```bash
 cli-calculator
 ```
-## Option 2: Install with APT
-
-1. Download signing key:
-```bash
-curl -fsSL https://clicalculator.blob.core.windows.net/repo/clicalc.gpg \
-| sudo gpg --dearmor -o /usr/share/keyrings/clicalc.gpg
-```
-2. Add the repo:
-```bash
-echo "deb [signed-by=/usr/share/keyrings/clicalc.gpg] \
-https://clicalculator.blob.core.windows.net/repo stable main" \
-| sudo tee /etc/apt/sources.list.d/clicalc.list
-
-sudo apt update
-```
-3. Install package:
-```bash
-sudo apt install cli-calculator -y
-```
-### Option 3: Download the Latest Release (Manual Installation)
+### Option 2: Download the Latest Release (Manual Installation)
 
 1. Download the latest prebuilt binary from the **Releases** page.
 2. Make it executable:
 
-```bash
-chmod +x calculator
-```
+   ```bash
+   chmod +x calculator
+   ```
+3. Move it to your system path:
 
-3. Move it into your system path:
+   ```bash
+   sudo mv calculator /usr/local/bin/
+   ```
+4. Verify installation:
 
-```bash
-sudo mv calculator /usr/local/bin/
-```
+   ```bash
+   calculator --help
+   ```
 
-4. Verify the installation:
+## Requirements
 
-```bash
-calculator --help
-```
+- CMake 3.10+
+- Any C++17-compatible compiler (GCC, Clang, MSVC)
+- zlib development headers and library (for PNG graph export)
 
----
-
-## Building from Source
-
-### Requirements
-
-* Git
-* CMake 3.10 or newer
-* A C++17-compatible compiler (GCC, Clang, MSVC)
-### Clone
-
-```bash
-git clone https://github.com/benedek553/cli-calculator.git
-cd ./cli-calculator
-```
-### Build
+## Build (out-of-source)
 
 ```bash
 cmake -S . -B build
-cmake --build build
+cmake --build build --config Release
 ```
 
-### Run
+## Run
 
 ```bash
 # Start the calculator
 ./build/src/calculator
 
-# Run the divisors tool
+# Run the divisors tool separately
 ./build/src/divisors
 ```
-### Install (optional) 
-```bash
-sudo cmake --install build
-```
----
 
-## Features
+## Features (brief)
 
 | Feature                  | Description |
 | ------------------------ | ----------- |
@@ -136,62 +91,54 @@ sudo cmake --install build
 | Variable inspection      | `--variables` lists persisted variable names and values without opening the interactive menu. |
 | Variable persistence     | Menu option 7 lets you list/set/delete variables that are persisted in `vars.toml` and reused in subsequent evaluations. |
 
----
+## Code structure
 
-## Code Structure
+- `src/core/` shared logic:
+  - `expression.*`: tokenizes and evaluates expressions (functions, factorial, operators).
+  - `numeral_conversion.*`: parsing/formatting signed integers between bases with prefixes.
+  - `equations.*`: prints solutions for linear and quadratic equations.
+  - `input.*`: reusable console input helpers (prompts, validation).
+  - `math_utils.*`: floating-point helpers reused across modules.
+  - `divisors_lib.*`: shared divisor calculation used by both executables.
+- `src/app/` application layer:
+  - `calculator_app.*`: application lifecycle + decision logic between CLI flags and the interactive menu.
+  - `cli_parser.*`: shared logic that turns raw `argv` tokens into structured actions before dispatch.
+- `menu_handlers.*`: interactive menu flows for arithmetic, conversions, divisors, equations, matrix operations, prime factorization, statistics, graphing, and square roots.
+- `src/main.cpp`: boots CLI colors, dispatches CLI flags, and runs the interactive menu.
+- `src/tools/divisors.cpp`: standalone divisors CLI entry point.
+- `src/ansi_colors.hpp`: shared ANSI color helpers (included by both apps).
 
-* **`src/core/`** – shared logic
+## CLI flags
 
-  * `expression.*`: tokenization and expression evaluation
-  * `numeral_conversion.*`: signed base parsing and formatting
-  * `equations.*`: linear and quadratic solvers
-  * `input.*`: reusable console input helpers
-  * `math_utils.*`: floating-point helpers
-  * `divisors_lib.*`: shared divisor logic
+- `--no-color` / `-nc`: disable ANSI colors in all outputs.
+- `--eval <expression>` / `-e <expression>`: evaluate and print the result, then exit.
+- `--repl`: launch a lightweight read-eval-print loop for quick calculations (supports `:history`, `!<n>`, Up/Down-arrow history like Bash, and every CLI flag via `:command`/`--command` inside the session). You can also launch it from the interactive main menu via **11) Launch REPL mode**.
+- `--square-root <value>` / `-sqrt <value>`: compute a single square root (fails for negative inputs).
+- `--convert <from> <to> <value>` / `-c <from> <to> <value>`: convert an integer from one base to another and print the result. Accepted bases are `2`, `10` and `16`.
+- `--prime-factorization <value>` / `-pf <value>`: display the prime factors of the given integer (falls back to `-1` for negatives).
+- `--variables` / `--list-variables`: print every persisted variable and its value.
+- `--batch <file.txt>` / `-b <file.txt>`: execute commands listed in a text file (one CLI invocation per line, comments starting with `#` are ignored). Batch files recognize helper directives such as `@set <variable>` (store the previous numeric result), `@input <variable>` (prompt for a value/expression and store it), `@include <file>` (process another batch file), `@if <expression>` / `@endif` (conditional execution, truthy = non-zero), and `@unset <variable>` (remove a stored variable).
+- `--output <format>`: emit structured responses (`json`, `xml`, or `yaml`) for CLI flags so scripts can parse the calculator output more easily.
+- `--version` / `-v`: display the calculator version and exit.
 
-* **`src/app/`** – application layer
-
-  * `cli_actions.*`: one-shot CLI flag handling
-  * `menu_handlers.*`: interactive menu workflows
-
-* `src/main.cpp`: CLI bootstrap, flag dispatch, and menu entry point
-
-* `src/tools/divisors.cpp`: standalone divisors executable
-
-* `src/ansi_colors.hpp`: shared ANSI color utilities
-
----
-
-## CLI Flags
-
-* `--no-color`, `-nc`: disable ANSI colors
-* `--eval <expr>`, `-e <expr>`: evaluate an expression and exit
-* `--repl`: launch the lightweight REPL mode
-* `--square-root <value>`, `-sqrt <value>`: compute a square root
-* `--convert <from> <to> <value>`, `-c <from> <to> <value>`: convert between bases (`2`, `10`, `16`)
-* `--prime-factorization <value>`, `-pf <value>`: display prime factors
-* `--variables`, `--list-variables`: list persisted variables
-* `--batch <file>`, `-b <file>`: execute commands from a batch file
-* `--output <json|xml|yaml>`: structured output for one-shot CLI commands
-* `--version`, `-v`: print version and exit
-
-All numeric arguments may reference previously defined variables. Structured output is only available for one-shot CLI commands and is disabled in interactive and REPL modes.
-
----
+All numeric CLI arguments (square root inputs, divisor targets, conversion bases/values, prime-factorization targets) accept variable names that were previously defined either via the menu or in batch mode via `@set`, `@input`, or an included file. Structured output formats require a one-shot CLI flag (they are rejected if only `--output` is provided without an action).
 
 ## Variables
 
-* Variables are stored in `vars.toml` and loaded on startup.
-* Menu option **7) Variable manager** allows listing, creating, updating, and deleting variables.
-* Variable names must start with a letter and may contain letters, digits, and underscores.
+- `vars.toml` stores user-defined variable names and values. The application loads it on start and overwrites it whenever you make changes through the UI.
+- Menu option **7) Variable manager** lists current entries, lets you create/update a variable (prompted for name/value), and remove entries you no longer need.
+- Valid variable names must start with a letter and can contain letters, digits, or underscores. Expressions referencing undefined variables throw an error.
 
----
+## Supported functions in expressions
 
-## Supported Functions
+`sin`, `cos`, `tan`, `cot`, `asin`, `acos`, `atan`, `log`, `exp`, `sqrt`, `sinh`, and factorial `!`. Expressions also accept `x` and `:` as multiplication and division.
 
-`sin`, `cos`, `tan`, `cot`, `asin`, `acos`, `atan`, `log`, `exp`, `sqrt`, `sinh`, and factorial (`!`).
+## Helpful tips
 
-Multiplication and division may also be written as `x` and `:` to match common Hungarian input conventions.
+- In the calculator menu, type `back` to return to the algebraic input mode.
+- The `x` and `:` symbols are interpreted as multiplication and division, respectively, to match common Hungarian input conventions.
+- The number-base menu accepts numbers prefixed with `0b` or `0x`.
+- Trigonometric/logarithmic functions expect radians and must be written with parentheses (e.g. `sin(0.5)`).
 
 ## Graph utility workflow
 
@@ -207,35 +154,36 @@ PNG exports rely on zlib; make sure the development package is available if you 
 
 ### REPL shortcuts
 
-## REPL Tips
+- Start it either with the `--repl` flag or by selecting **11) Launch REPL mode** from the interactive main menu.
+- Press the Up/Down arrows (on POSIX terminals) to navigate command history, similar to Bash.
+- Use `:history` to print the stored commands and `!<n>` to rerun the nth entry.
+- Every CLI flag is available inside the REPL via `:command` or `--command`, so `:convert`, `--divisors`, `:batch`, etc., behave the same as their one-shot counterparts.
+- `:cli-help`/`--help` prints the full CLI help text, while `:help` focuses on REPL-only shortcuts.
+- Structured `--output` formats are intentionally disabled during REPL sessions to keep interactions conversational.
 
-* Start with `--repl` or via **11) Launch REPL mode** in the menu.
-* Use Up/Down arrows to navigate command history.
-* `:history` lists past commands, `!<n>` reruns an entry.
-* All CLI flags are available inside the REPL via `:command` or `--command`.
-* Structured `--output` formats are intentionally disabled in REPL mode.
+## Base conversion (CLI)
 
----
+- Description: Convert a single integer from one numeral system to another using the `--convert` (or `-c`) flag. The program accepts source and target bases as decimal integers (`2`, `10` or `16`) followed by the value to convert.
+- Input formats: the value may be signed (`+` or `-`) and may include the usual `0b` (binary) or `0x` (hex) prefixes. The converter also accepts plain digits for decimal input.
+- Output: the converted integer is printed with the conventional prefix for non-decimal bases (`0b` for binary, `0x` for hexadecimal). Decimal output is shown without a prefix.
+- Exit codes: returns `0` on success; prints an error and returns non-zero on invalid bases, malformed input, or overflow.
 
-## Base Conversion Example
+Examples
 
 ```bash
 # Convert decimal 78 to hexadecimal
-calculator --convert 10 16 78
+./build/src/calculator --convert 10 16 78
 # Result: 0x4E
 
-# Convert binary to decimal
-calculator -c 2 10 0b1011
+# Convert a binary value to decimal (accepts 0b prefix)
+./build/src/calculator -c 2 10 0b1011
 # Result: 11
 
-# Convert negative hexadecimal to binary
-calculator --convert 16 2 -0x1A
+# Convert a negative hexadecimal value to binary
+./build/src/calculator --convert 16 2 -0x1A
 # Result: -0b11010
 ```
 
----
+## Contribution
 
-## Contributing
-
-Issues and pull requests are welcome. Contributions that improve correctness, usability, or documentation are especially appreciated.
-
+Feel free to submit issues or pull requests!
