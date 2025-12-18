@@ -18,9 +18,10 @@ set(CORE_SOURCES
 
 set(APP_SOURCES
     main.cpp
-    app/cli_actions.cpp
+    app/calculator_app.cpp
     app/cli_batch.cpp
     app/cli_commands.cpp
+    app/cli_parser.cpp
     app/cli_repl.cpp
     app/cli_numeric.cpp
     app/cli_output.cpp

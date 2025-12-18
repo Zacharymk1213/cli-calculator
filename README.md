@@ -101,7 +101,8 @@ cmake --build build --config Release
   - `math_utils.*`: floating-point helpers reused across modules.
   - `divisors_lib.*`: shared divisor calculation used by both executables.
 - `src/app/` application layer:
-  - `cli_actions.*`: one-shot flag handling for `--eval`, `--convert`, `--divisors`, `--square-root`.
+  - `calculator_app.*`: application lifecycle + decision logic between CLI flags and the interactive menu.
+  - `cli_parser.*`: shared logic that turns raw `argv` tokens into structured actions before dispatch.
 - `menu_handlers.*`: interactive menu flows for arithmetic, conversions, divisors, equations, matrix operations, prime factorization, statistics, graphing, and square roots.
 - `src/main.cpp`: boots CLI colors, dispatches CLI flags, and runs the interactive menu.
 - `src/tools/divisors.cpp`: standalone divisors CLI entry point.
