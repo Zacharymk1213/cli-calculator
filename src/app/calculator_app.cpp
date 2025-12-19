@@ -11,12 +11,12 @@
 #include <iostream>
 
 std::optional<int>
-CalculatorApp::executeCliAction(const CliParseResult &parseResult) const {
+CalculatorApp::executeCliAction(const CliParseResult &parseResult) {
   if (!parseResult.action) {
     if (parseResult.outputFormat != OutputFormat::Text &&
         parseResult.sawNonColorArgument) {
       printStructuredError(std::cerr, parseResult.outputFormat, "output",
-                           "structured output requires a CLI action flag");
+      "structured output requires a CLI action flag");
       return 1;
     }
     return std::nullopt;
@@ -25,7 +25,7 @@ CalculatorApp::executeCliAction(const CliParseResult &parseResult) const {
 }
 
 int CalculatorApp::dispatchAction(const CliAction &action,
-                                  OutputFormat format) const {
+                                  OutputFormat format) {
   switch (action.type) {
   case CliActionType::Eval:
     return runEval(action.params.empty() ? "" : action.params.front(), format);
