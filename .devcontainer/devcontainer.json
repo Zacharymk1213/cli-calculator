@@ -6,9 +6,9 @@
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
 
-  "postCreateCommand": "sudo apt update && sudo apt install -y build-essential cmake cppcheck valgrind",
+  "postCreateCommand": "sudo apt update && sudo apt install -y build-essential cmake cppcheck valgrind clang-format clang-tidy gdb lldb git",
 
-  "forwardPorts": [8080, 3000],
+  "forwardPorts": [],
 
   "customizations": {
     "vscode": {
