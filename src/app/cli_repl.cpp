@@ -70,9 +70,21 @@ enum class CommandKind {
   SquareRoot,
   Divisors,
   Convert,
+  UnitConvert,
   PrimeFactorization,
+  SolveLinear,
+  SolveQuadratic,
+  MatrixAdd,
+  MatrixSubtract,
+  MatrixMultiply,
+  Statistics,
+  GraphValues,
+  GraphCsv,
   Version,
   Variables,
+  SetVariable,
+  UnsetVariable,
+  ReportBug,
   Batch,
   NoColor,
   OutputUnsupported,
@@ -330,9 +342,45 @@ std::optional<ParsedCommand> interpretCommand(const RawCommand &raw) {
     parsed.kind = CommandKind::Convert;
     return parsed;
   }
+  if (canonical == "unit-convert" || canonical == "unitconvert") {
+    parsed.kind = CommandKind::UnitConvert;
+    return parsed;
+  }
   if (canonical == "prime-factorization" || canonical == "primefactorization" ||
       canonical == "prime" || canonical == "pf") {
     parsed.kind = CommandKind::PrimeFactorization;
+    return parsed;
+  }
+  if (canonical == "solve-linear" || canonical == "solvelinear") {
+    parsed.kind = CommandKind::SolveLinear;
+    return parsed;
+  }
+  if (canonical == "solve-quadratic" || canonical == "solvequadratic") {
+    parsed.kind = CommandKind::SolveQuadratic;
+    return parsed;
+  }
+  if (canonical == "matrix-add" || canonical == "matrixadd") {
+    parsed.kind = CommandKind::MatrixAdd;
+    return parsed;
+  }
+  if (canonical == "matrix-subtract" || canonical == "matrixsubtract") {
+    parsed.kind = CommandKind::MatrixSubtract;
+    return parsed;
+  }
+  if (canonical == "matrix-multiply" || canonical == "matrixmultiply") {
+    parsed.kind = CommandKind::MatrixMultiply;
+    return parsed;
+  }
+  if (canonical == "stats" || canonical == "statistics") {
+    parsed.kind = CommandKind::Statistics;
+    return parsed;
+  }
+  if (canonical == "graph-values" || canonical == "graphvalues") {
+    parsed.kind = CommandKind::GraphValues;
+    return parsed;
+  }
+  if (canonical == "graph-csv" || canonical == "graphcsv") {
+    parsed.kind = CommandKind::GraphCsv;
     return parsed;
   }
   if (canonical == "version" || canonical == "v") {
@@ -342,6 +390,18 @@ std::optional<ParsedCommand> interpretCommand(const RawCommand &raw) {
   if (canonical == "variables" || canonical == "list-variables" ||
       canonical == "listvariables") {
     parsed.kind = CommandKind::Variables;
+    return parsed;
+  }
+  if (canonical == "set-variable" || canonical == "setvariable") {
+    parsed.kind = CommandKind::SetVariable;
+    return parsed;
+  }
+  if (canonical == "unset-variable" || canonical == "unsetvariable") {
+    parsed.kind = CommandKind::UnsetVariable;
+    return parsed;
+  }
+  if (canonical == "report-bug" || canonical == "reportbug") {
+    parsed.kind = CommandKind::ReportBug;
     return parsed;
   }
   if (canonical == "batch" || canonical == "batch-file" ||
@@ -586,6 +646,16 @@ int runRepl(OutputFormat outputFormat) {
           runConvert(parsed->args[0], parsed->args[1], parsed->args[2],
                      OutputFormat::Text);
           break;
+        case CommandKind::UnitConvert:
+          if (parsed->args.size() != 4) {
+            std::cout << YELLOW
+                      << "Usage: :unit-convert <category> <from> <to> <value>"
+                      << RESET << '\n';
+            break;
+          }
+          runUnitConvert(parsed->args[0], parsed->args[1], parsed->args[2],
+                         parsed->args[3], OutputFormat::Text);
+          break;
         case CommandKind::PrimeFactorization:
           if (parsed->args.size() != 1) {
             std::cout << YELLOW << "Usage: :prime-factorization <value>"
@@ -594,11 +664,101 @@ int runRepl(OutputFormat outputFormat) {
           }
           runPrimeFactorization(parsed->args.front(), OutputFormat::Text);
           break;
+        case CommandKind::SolveLinear:
+          if (parsed->args.size() != 2) {
+            std::cout << YELLOW << "Usage: :solve-linear <a> <b>" << RESET
+                      << '\n';
+            break;
+          }
+          runSolveLinear(parsed->args[0], parsed->args[1], OutputFormat::Text);
+          break;
+        case CommandKind::SolveQuadratic:
+          if (parsed->args.size() != 3) {
+            std::cout << YELLOW << "Usage: :solve-quadratic <a> <b> <c>"
+                      << RESET << '\n';
+            break;
+          }
+          runSolveQuadratic(parsed->args[0], parsed->args[1], parsed->args[2],
+                            OutputFormat::Text);
+          break;
+        case CommandKind::MatrixAdd:
+          if (parsed->args.size() != 2) {
+            std::cout << YELLOW << "Usage: :matrix-add <A> <B>" << RESET
+                      << '\n';
+            break;
+          }
+          runMatrixAdd(parsed->args[0], parsed->args[1], OutputFormat::Text);
+          break;
+        case CommandKind::MatrixSubtract:
+          if (parsed->args.size() != 2) {
+            std::cout << YELLOW << "Usage: :matrix-subtract <A> <B>" << RESET
+                      << '\n';
+            break;
+          }
+          runMatrixSubtract(parsed->args[0], parsed->args[1],
+                            OutputFormat::Text);
+          break;
+        case CommandKind::MatrixMultiply:
+          if (parsed->args.size() != 2) {
+            std::cout << YELLOW << "Usage: :matrix-multiply <A> <B>" << RESET
+                      << '\n';
+            break;
+          }
+          runMatrixMultiply(parsed->args[0], parsed->args[1],
+                            OutputFormat::Text);
+          break;
+        case CommandKind::Statistics:
+          if (parsed->args.empty()) {
+            std::cout << YELLOW << "Usage: :stats <values...>" << RESET
+                      << '\n';
+            break;
+          }
+          runStatistics(parsed->args, OutputFormat::Text);
+          break;
+        case CommandKind::GraphValues:
+          if (parsed->args.size() < 2) {
+            std::cout << YELLOW
+                      << "Usage: :graph-values <output.png> <values...> "
+                         "[--height N]"
+                      << RESET << '\n';
+            break;
+          }
+          runGraphValues(parsed->args, OutputFormat::Text);
+          break;
+        case CommandKind::GraphCsv:
+          if (parsed->args.size() < 3) {
+            std::cout << YELLOW
+                      << "Usage: :graph-csv <output.png> <csv> <column> "
+                         "[--height N] [--no-headers]"
+                      << RESET << '\n';
+            break;
+          }
+          runGraphCsv(parsed->args, OutputFormat::Text);
+          break;
         case CommandKind::Version:
           runVersion(OutputFormat::Text);
           break;
         case CommandKind::Variables:
           runListVariables(OutputFormat::Text);
+          break;
+        case CommandKind::SetVariable:
+          if (parsed->args.size() != 2) {
+            std::cout << YELLOW << "Usage: :set-variable <name> <value>"
+                      << RESET << '\n';
+            break;
+          }
+          runSetVariable(parsed->args[0], parsed->args[1], OutputFormat::Text);
+          break;
+        case CommandKind::UnsetVariable:
+          if (parsed->args.size() != 1) {
+            std::cout << YELLOW << "Usage: :unset-variable <name>" << RESET
+                      << '\n';
+            break;
+          }
+          runUnsetVariable(parsed->args[0], OutputFormat::Text);
+          break;
+        case CommandKind::ReportBug:
+          runReportBug(OutputFormat::Text);
           break;
         case CommandKind::Batch:
           if (parsed->args.size() > 1) {

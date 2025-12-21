@@ -4,6 +4,8 @@
 #include "cli_repl.hpp"
 #include "core/graph_png.hpp"
 #include "core/matrix.hpp"
+#include "core/parse_utils.hpp"
+#include "core/unit_conversion.hpp"
 #include "core/variables.hpp"
 #include "divisors.hpp"
 #include "equations.hpp"
@@ -45,30 +47,6 @@ std::string toLowerCopy(std::string value) {
                    return static_cast<char>(std::tolower(ch));
                  });
   return value;
-}
-
-std::vector<std::string> parseCsvLine(const std::string &line) {
-  std::vector<std::string> fields;
-  std::string field;
-  bool inQuotes = false;
-  for (std::size_t idx = 0; idx < line.size(); ++idx) {
-    char ch = line[idx];
-    if (ch == '"') {
-      if (inQuotes && idx + 1 < line.size() && line[idx + 1] == '"') {
-        field.push_back('"');
-        ++idx;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (ch == ',' && !inQuotes) {
-      fields.push_back(field);
-      field.clear();
-    } else {
-      field.push_back(ch);
-    }
-  }
-  fields.push_back(field);
-  return fields;
 }
 
 int chooseBase(const std::string &label) {
@@ -196,34 +174,6 @@ void printMatrixResult(const Matrix &matrix) {
   }
   std::cout.precision(previousPrecision);
   std::cout.flags(previousFlags);
-}
-
-bool parseNumberList(const std::string &input, std::vector<double> &values,
-                     std::string &error) {
-  values.clear();
-  std::string sanitized = input;
-  std::replace(sanitized.begin(), sanitized.end(), ',', ' ');
-  std::istringstream stream(sanitized);
-  std::string token;
-  while (stream >> token) {
-    try {
-      std::size_t processed = 0;
-      double value = std::stod(token, &processed);
-      if (processed != token.size()) {
-        error = "Invalid number: " + token;
-        return false;
-      }
-      values.push_back(value);
-    } catch (const std::exception &) {
-      error = "Invalid number: " + token;
-      return false;
-    }
-  }
-  if (values.empty()) {
-    error = "Please enter at least one numeric value.";
-    return false;
-  }
-  return true;
 }
 
 bool promptManualGraphValues(std::vector<double> &values) {
@@ -448,54 +398,6 @@ std::string ensurePngExtension(std::string path) {
   return path;
 }
 
-struct LinearUnit {
-  std::string name;
-  std::string symbol;
-  double toBaseFactor;
-};
-
-struct LinearCategory {
-  std::string name;
-  std::vector<LinearUnit> units;
-};
-
-enum class TemperatureScale { Celsius, Fahrenheit, Kelvin };
-
-struct TemperatureUnit {
-  std::string name;
-  std::string symbol;
-  TemperatureScale scale;
-};
-
-const std::vector<LinearCategory> kLinearCategories = {
-    {"Length",
-     {{"Meter", "m", 1.0},
-      {"Kilometer", "km", 1000.0},
-      {"Centimeter", "cm", 0.01},
-      {"Millimeter", "mm", 0.001},
-      {"Mile", "mi", 1609.344},
-      {"Yard", "yd", 0.9144},
-      {"Foot", "ft", 0.3048},
-      {"Inch", "in", 0.0254}}},
-    {"Mass",
-     {{"Kilogram", "kg", 1.0},
-      {"Gram", "g", 0.001},
-      {"Milligram", "mg", 0.000001},
-      {"Metric ton", "t", 1000.0},
-      {"Pound", "lb", 0.45359237},
-      {"Ounce", "oz", 0.028349523125}}},
-    {"Volume",
-     {{"Liter", "L", 1.0},
-      {"Milliliter", "mL", 0.001},
-      {"Cubic meter", "m^3", 1000.0},
-      {"Gallon (US)", "gal", 3.78541},
-      {"Pint (US)", "pt", 0.473176}}}};
-
-const std::vector<TemperatureUnit> kTemperatureUnits = {
-    {"Celsius", "C", TemperatureScale::Celsius},
-    {"Fahrenheit", "F", TemperatureScale::Fahrenheit},
-    {"Kelvin", "K", TemperatureScale::Kelvin}};
-
 template <typename Unit>
 int chooseUnit(const std::vector<Unit> &units, const std::string &prompt) {
   while (true) {
@@ -512,42 +414,6 @@ int chooseUnit(const std::vector<Unit> &units, const std::string &prompt) {
     }
     return selection - 1;
   }
-}
-
-double convertLinearValue(double value, const LinearUnit &from,
-                          const LinearUnit &to) {
-  double baseValue = value * from.toBaseFactor;
-  return baseValue / to.toBaseFactor;
-}
-
-double toCelsius(double value, TemperatureScale scale) {
-  switch (scale) {
-  case TemperatureScale::Celsius:
-    return value;
-  case TemperatureScale::Fahrenheit:
-    return (value - 32.0) * 5.0 / 9.0;
-  case TemperatureScale::Kelvin:
-    return value - 273.15;
-  }
-  return value;
-}
-
-double fromCelsius(double value, TemperatureScale scale) {
-  switch (scale) {
-  case TemperatureScale::Celsius:
-    return value;
-  case TemperatureScale::Fahrenheit:
-    return (value * 9.0 / 5.0) + 32.0;
-  case TemperatureScale::Kelvin:
-    return value + 273.15;
-  }
-  return value;
-}
-
-double convertTemperature(double value, const TemperatureUnit &from,
-                          const TemperatureUnit &to) {
-  double celsius = toCelsius(value, from.scale);
-  return fromCelsius(celsius, to.scale);
 }
 
 void runNumeralSystemConversion() {
@@ -631,13 +497,15 @@ void runTemperatureConversion() {
     std::cout << '\n'
               << UNDERLINE << GREEN << "--- Temperature Conversion ---" << RESET
               << '\n';
-    int fromUnit = chooseUnit(
-        kTemperatureUnits, BOLD + YELLOW + std::string("Source unit:") + RESET);
+    int fromUnit =
+        chooseUnit(temperatureUnits(),
+                   BOLD + YELLOW + std::string("Source unit:") + RESET);
     if (fromUnit < 0) {
       return;
     }
-    int toUnit = chooseUnit(kTemperatureUnits,
-                            BOLD + BLUE + std::string("Target unit:") + RESET);
+    int toUnit =
+        chooseUnit(temperatureUnits(),
+                   BOLD + BLUE + std::string("Target unit:") + RESET);
     if (toUnit < 0) {
       return;
     }
@@ -649,8 +517,8 @@ void runTemperatureConversion() {
       continue;
     }
 
-    const auto &from = kTemperatureUnits[fromUnit];
-    const auto &to = kTemperatureUnits[toUnit];
+    const auto &from = temperatureUnits()[fromUnit];
+    const auto &to = temperatureUnits()[toUnit];
     std::string prompt = "Enter temperature in " + from.name + ": ";
     double value = readDouble(prompt);
     double result = convertTemperature(value, from, to);
@@ -668,21 +536,21 @@ void runUnitConversionMenu() {
     std::cout << '\n'
               << UNDERLINE << GREEN << "--- Unit Conversion ---" << RESET
               << '\n';
-    for (std::size_t idx = 0; idx < kLinearCategories.size(); ++idx) {
+    for (std::size_t idx = 0; idx < linearCategories().size(); ++idx) {
       std::cout << YELLOW << ' ' << (idx + 1) << ") " << RESET << CYAN
-                << kLinearCategories[idx].name << RESET << '\n';
+                << linearCategories()[idx].name << RESET << '\n';
     }
-    std::cout << YELLOW << ' ' << (kLinearCategories.size() + 1) << ") "
+    std::cout << YELLOW << ' ' << (linearCategories().size() + 1) << ") "
               << RESET << CYAN << "Temperature" << RESET << '\n';
     std::cout << YELLOW << " 0) " << RESET << CYAN << "Back" << RESET << '\n';
 
-    int maxOption = static_cast<int>(kLinearCategories.size() + 1);
+    int maxOption = static_cast<int>(linearCategories().size() + 1);
     int choice = readMenuChoice(0, maxOption);
     if (choice == 0) {
       return;
     }
-    if (choice <= static_cast<int>(kLinearCategories.size())) {
-      runLinearCategoryConversion(kLinearCategories[choice - 1]);
+    if (choice <= static_cast<int>(linearCategories().size())) {
+      runLinearCategoryConversion(linearCategories()[choice - 1]);
     } else {
       runTemperatureConversion();
     }

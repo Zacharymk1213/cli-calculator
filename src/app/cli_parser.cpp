@@ -149,6 +149,19 @@ CliParser::parse(int argc, char **argv) const {
       break;
     }
 
+    if (arg == "--unit-convert") {
+      if (i + 4 >= argc) {
+        std::string message = "missing arguments after " + arg;
+        return {result, makeError(message, "unit-convert", 2)};
+      }
+      result.action = makeAction(CliActionType::UnitConvert,
+                                 {std::string(argv[i + 1]),
+                                  std::string(argv[i + 2]),
+                                  std::string(argv[i + 3]),
+                                  std::string(argv[i + 4])});
+      break;
+    }
+
     if (arg == "--prime-factorization" || arg == "-pf") {
       if (i + 1 >= argc) {
         std::string message = "missing arguments after " + arg;
@@ -159,6 +172,101 @@ CliParser::parse(int argc, char **argv) const {
       break;
     }
 
+    if (arg == "--solve-linear") {
+      if (i + 2 >= argc) {
+        std::string message = "missing arguments after " + arg;
+        return {result, makeError(message, "solve-linear", 2)};
+      }
+      result.action = makeAction(CliActionType::SolveLinear,
+                                 {std::string(argv[i + 1]),
+                                  std::string(argv[i + 2])});
+      break;
+    }
+
+    if (arg == "--solve-quadratic") {
+      if (i + 3 >= argc) {
+        std::string message = "missing arguments after " + arg;
+        return {result, makeError(message, "solve-quadratic", 2)};
+      }
+      result.action = makeAction(CliActionType::SolveQuadratic,
+                                 {std::string(argv[i + 1]),
+                                  std::string(argv[i + 2]),
+                                  std::string(argv[i + 3])});
+      break;
+    }
+
+    if (arg == "--matrix-add") {
+      if (i + 2 >= argc) {
+        std::string message = "missing arguments after " + arg;
+        return {result, makeError(message, "matrix-add", 2)};
+      }
+      result.action = makeAction(CliActionType::MatrixAdd,
+                                 {std::string(argv[i + 1]),
+                                  std::string(argv[i + 2])});
+      break;
+    }
+
+    if (arg == "--matrix-subtract") {
+      if (i + 2 >= argc) {
+        std::string message = "missing arguments after " + arg;
+        return {result, makeError(message, "matrix-subtract", 2)};
+      }
+      result.action = makeAction(CliActionType::MatrixSubtract,
+                                 {std::string(argv[i + 1]),
+                                  std::string(argv[i + 2])});
+      break;
+    }
+
+    if (arg == "--matrix-multiply") {
+      if (i + 2 >= argc) {
+        std::string message = "missing arguments after " + arg;
+        return {result, makeError(message, "matrix-multiply", 2)};
+      }
+      result.action = makeAction(CliActionType::MatrixMultiply,
+                                 {std::string(argv[i + 1]),
+                                  std::string(argv[i + 2])});
+      break;
+    }
+
+    if (arg == "--stats" || arg == "--statistics") {
+      std::vector<std::string> params;
+      for (int j = i + 1; j < argc; ++j) {
+        std::string token(argv[j]);
+        if (token == "--output" || isNoColorFlag(token)) {
+          break;
+        }
+        params.emplace_back(std::move(token));
+      }
+      result.action = makeAction(CliActionType::Statistics, params);
+      break;
+    }
+
+    if (arg == "--graph-values") {
+      std::vector<std::string> params;
+      for (int j = i + 1; j < argc; ++j) {
+        std::string token(argv[j]);
+        if (token == "--output" || isNoColorFlag(token)) {
+          break;
+        }
+        params.emplace_back(std::move(token));
+      }
+      result.action = makeAction(CliActionType::GraphValues, params);
+      break;
+    }
+
+    if (arg == "--graph-csv") {
+      std::vector<std::string> params;
+      for (int j = i + 1; j < argc; ++j) {
+        std::string token(argv[j]);
+        if (token == "--output" || isNoColorFlag(token)) {
+          break;
+        }
+        params.emplace_back(std::move(token));
+      }
+      result.action = makeAction(CliActionType::GraphCsv, params);
+      break;
+    }
+
     if (arg == "--version" || arg == "-v") {
       result.action = makeAction(CliActionType::Version);
       break;
@@ -166,6 +274,32 @@ CliParser::parse(int argc, char **argv) const {
 
     if (arg == "--variables" || arg == "--list-variables") {
       result.action = makeAction(CliActionType::Variables);
+      break;
+    }
+
+    if (arg == "--set-variable") {
+      if (i + 2 >= argc) {
+        std::string message = "missing arguments after " + arg;
+        return {result, makeError(message, "set-variable", 2)};
+      }
+      result.action = makeAction(CliActionType::SetVariable,
+                                 {std::string(argv[i + 1]),
+                                  std::string(argv[i + 2])});
+      break;
+    }
+
+    if (arg == "--unset-variable") {
+      if (i + 1 >= argc) {
+        std::string message = "missing arguments after " + arg;
+        return {result, makeError(message, "unset-variable", 2)};
+      }
+      result.action = makeAction(CliActionType::UnsetVariable,
+                                 {std::string(argv[i + 1])});
+      break;
+    }
+
+    if (arg == "--report-bug") {
+      result.action = makeAction(CliActionType::ReportBug);
       break;
     }
 
