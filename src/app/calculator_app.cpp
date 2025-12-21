@@ -43,13 +43,79 @@ int CalculatorApp::dispatchAction(const CliAction &action,
     }
     return runConvert(action.params[0], action.params[1], action.params[2],
                       format);
+  case CliActionType::UnitConvert:
+    if (action.params.size() < 4) {
+      printStructuredError(std::cerr, format, "unit-convert",
+                           "missing arguments after --unit-convert");
+      return 2;
+    }
+    return runUnitConvert(action.params[0], action.params[1], action.params[2],
+                          action.params[3], format);
   case CliActionType::PrimeFactorization:
     return runPrimeFactorization(
         action.params.empty() ? "" : action.params.front(), format);
+  case CliActionType::SolveLinear:
+    if (action.params.size() < 2) {
+      printStructuredError(std::cerr, format, "solve-linear",
+                           "missing arguments after --solve-linear");
+      return 2;
+    }
+    return runSolveLinear(action.params[0], action.params[1], format);
+  case CliActionType::SolveQuadratic:
+    if (action.params.size() < 3) {
+      printStructuredError(std::cerr, format, "solve-quadratic",
+                           "missing arguments after --solve-quadratic");
+      return 2;
+    }
+    return runSolveQuadratic(action.params[0], action.params[1], action.params[2],
+                             format);
+  case CliActionType::MatrixAdd:
+    if (action.params.size() < 2) {
+      printStructuredError(std::cerr, format, "matrix-add",
+                           "missing arguments after --matrix-add");
+      return 2;
+    }
+    return runMatrixAdd(action.params[0], action.params[1], format);
+  case CliActionType::MatrixSubtract:
+    if (action.params.size() < 2) {
+      printStructuredError(std::cerr, format, "matrix-subtract",
+                           "missing arguments after --matrix-subtract");
+      return 2;
+    }
+    return runMatrixSubtract(action.params[0], action.params[1], format);
+  case CliActionType::MatrixMultiply:
+    if (action.params.size() < 2) {
+      printStructuredError(std::cerr, format, "matrix-multiply",
+                           "missing arguments after --matrix-multiply");
+      return 2;
+    }
+    return runMatrixMultiply(action.params[0], action.params[1], format);
+  case CliActionType::Statistics:
+    return runStatistics(action.params, format);
+  case CliActionType::GraphValues:
+    return runGraphValues(action.params, format);
+  case CliActionType::GraphCsv:
+    return runGraphCsv(action.params, format);
   case CliActionType::Version:
     return runVersion(format);
   case CliActionType::Variables:
     return runListVariables(format);
+  case CliActionType::SetVariable:
+    if (action.params.size() < 2) {
+      printStructuredError(std::cerr, format, "set-variable",
+                           "missing arguments after --set-variable");
+      return 2;
+    }
+    return runSetVariable(action.params[0], action.params[1], format);
+  case CliActionType::UnsetVariable:
+    if (action.params.empty()) {
+      printStructuredError(std::cerr, format, "unset-variable",
+                           "missing arguments after --unset-variable");
+      return 2;
+    }
+    return runUnsetVariable(action.params[0], format);
+  case CliActionType::ReportBug:
+    return runReportBug(format);
   case CliActionType::Help:
     return runHelp(format);
   case CliActionType::Repl:

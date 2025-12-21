@@ -143,15 +143,51 @@ std::string normalizeBatchFlag(const std::string &flag) {
   if (stripped == "c" || stripped == "convert") {
     return "--convert";
   }
+  if (stripped == "unit-convert" || stripped == "unitconvert") {
+    return "--unit-convert";
+  }
   if (stripped == "pf" || stripped == "primefactorization" ||
       stripped == "prime-factorization") {
     return "--prime-factorization";
+  }
+  if (stripped == "solve-linear" || stripped == "solvelinear") {
+    return "--solve-linear";
+  }
+  if (stripped == "solve-quadratic" || stripped == "solvequadratic") {
+    return "--solve-quadratic";
+  }
+  if (stripped == "matrix-add" || stripped == "matrixadd") {
+    return "--matrix-add";
+  }
+  if (stripped == "matrix-subtract" || stripped == "matrixsubtract") {
+    return "--matrix-subtract";
+  }
+  if (stripped == "matrix-multiply" || stripped == "matrixmultiply") {
+    return "--matrix-multiply";
+  }
+  if (stripped == "stats" || stripped == "statistics") {
+    return "--stats";
+  }
+  if (stripped == "graph-values" || stripped == "graphvalues") {
+    return "--graph-values";
+  }
+  if (stripped == "graph-csv" || stripped == "graphcsv") {
+    return "--graph-csv";
   }
   if (stripped == "v" || stripped == "version") {
     return "--version";
   }
   if (stripped == "variables" || stripped == "list-variables") {
     return "--variables";
+  }
+  if (stripped == "set-variable" || stripped == "setvariable") {
+    return "--set-variable";
+  }
+  if (stripped == "unset-variable" || stripped == "unsetvariable") {
+    return "--unset-variable";
+  }
+  if (stripped == "report-bug" || stripped == "reportbug") {
+    return "--report-bug";
   }
   if (stripped == "h" || stripped == "help") {
     return "--help";
@@ -297,6 +333,21 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     state.lastResult.reset();
     return runConvert(tokens[1], tokens[2], tokens[3], outputFormat);
   }
+  if (flag == "--unit-convert") {
+    if (tokens.size() < 5) {
+      if (outputFormat == OutputFormat::Text) {
+        std::cerr << RED << "Error: missing arguments after --unit-convert"
+                  << RESET << '\n';
+      } else {
+        printStructuredError(std::cerr, outputFormat, "unit-convert",
+                             "missing arguments after --unit-convert");
+      }
+      return 2;
+    }
+    state.lastResult.reset();
+    return runUnitConvert(tokens[1], tokens[2], tokens[3], tokens[4],
+                          outputFormat);
+  }
   if (flag == "--prime-factorization") {
     if (tokens.size() < 2) {
       if (outputFormat == OutputFormat::Text) {
@@ -312,6 +363,125 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     state.lastResult.reset();
     return runPrimeFactorization(tokens[1], outputFormat);
   }
+  if (flag == "--solve-linear") {
+    if (tokens.size() < 3) {
+      if (outputFormat == OutputFormat::Text) {
+        std::cerr << RED << "Error: missing arguments after --solve-linear"
+                  << RESET << '\n';
+      } else {
+        printStructuredError(std::cerr, outputFormat, "solve-linear",
+                             "missing arguments after --solve-linear");
+      }
+      return 2;
+    }
+    state.lastResult.reset();
+    return runSolveLinear(tokens[1], tokens[2], outputFormat);
+  }
+  if (flag == "--solve-quadratic") {
+    if (tokens.size() < 4) {
+      if (outputFormat == OutputFormat::Text) {
+        std::cerr << RED
+                  << "Error: missing arguments after --solve-quadratic"
+                  << RESET << '\n';
+      } else {
+        printStructuredError(std::cerr, outputFormat, "solve-quadratic",
+                             "missing arguments after --solve-quadratic");
+      }
+      return 2;
+    }
+    state.lastResult.reset();
+    return runSolveQuadratic(tokens[1], tokens[2], tokens[3], outputFormat);
+  }
+  if (flag == "--matrix-add") {
+    if (tokens.size() < 3) {
+      if (outputFormat == OutputFormat::Text) {
+        std::cerr << RED << "Error: missing arguments after --matrix-add"
+                  << RESET << '\n';
+      } else {
+        printStructuredError(std::cerr, outputFormat, "matrix-add",
+                             "missing arguments after --matrix-add");
+      }
+      return 2;
+    }
+    state.lastResult.reset();
+    return runMatrixAdd(tokens[1], tokens[2], outputFormat);
+  }
+  if (flag == "--matrix-subtract") {
+    if (tokens.size() < 3) {
+      if (outputFormat == OutputFormat::Text) {
+        std::cerr << RED
+                  << "Error: missing arguments after --matrix-subtract"
+                  << RESET << '\n';
+      } else {
+        printStructuredError(std::cerr, outputFormat, "matrix-subtract",
+                             "missing arguments after --matrix-subtract");
+      }
+      return 2;
+    }
+    state.lastResult.reset();
+    return runMatrixSubtract(tokens[1], tokens[2], outputFormat);
+  }
+  if (flag == "--matrix-multiply") {
+    if (tokens.size() < 3) {
+      if (outputFormat == OutputFormat::Text) {
+        std::cerr << RED
+                  << "Error: missing arguments after --matrix-multiply"
+                  << RESET << '\n';
+      } else {
+        printStructuredError(std::cerr, outputFormat, "matrix-multiply",
+                             "missing arguments after --matrix-multiply");
+      }
+      return 2;
+    }
+    state.lastResult.reset();
+    return runMatrixMultiply(tokens[1], tokens[2], outputFormat);
+  }
+  if (flag == "--stats") {
+    if (tokens.size() < 2) {
+      if (outputFormat == OutputFormat::Text) {
+        std::cerr << RED << "Error: missing values after --stats" << RESET
+                  << '\n';
+      } else {
+        printStructuredError(std::cerr, outputFormat, "stats",
+                             "missing values after --stats");
+      }
+      return 2;
+    }
+    state.lastResult.reset();
+    std::vector<std::string> args(tokens.begin() + 1, tokens.end());
+    return runStatistics(args, outputFormat);
+  }
+  if (flag == "--graph-values") {
+    if (tokens.size() < 3) {
+      if (outputFormat == OutputFormat::Text) {
+        std::cerr << RED
+                  << "Error: missing arguments after --graph-values" << RESET
+                  << '\n';
+      } else {
+        printStructuredError(std::cerr, outputFormat, "graph-values",
+                             "missing arguments after --graph-values");
+      }
+      return 2;
+    }
+    state.lastResult.reset();
+    std::vector<std::string> args(tokens.begin() + 1, tokens.end());
+    return runGraphValues(args, outputFormat);
+  }
+  if (flag == "--graph-csv") {
+    if (tokens.size() < 4) {
+      if (outputFormat == OutputFormat::Text) {
+        std::cerr << RED << "Error: missing arguments after --graph-csv"
+                  << RESET << '\n';
+      } else {
+        printStructuredError(std::cerr, outputFormat, "graph-csv",
+                             "missing arguments after --graph-csv");
+      }
+      return 2;
+    }
+    state.lastResult.reset();
+    std::vector<std::string> args(tokens.begin() + 1, tokens.end());
+    return runGraphCsv(args, outputFormat);
+  }
   if (flag == "--version") {
     state.lastResult.reset();
     return runVersion(outputFormat);
@@ -319,6 +489,38 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
   if (flag == "--variables") {
     state.lastResult.reset();
     return runListVariables(outputFormat);
+  }
+  if (flag == "--set-variable") {
+    if (tokens.size() < 3) {
+      if (outputFormat == OutputFormat::Text) {
+        std::cerr << RED << "Error: missing arguments after --set-variable"
+                  << RESET << '\n';
+      } else {
+        printStructuredError(std::cerr, outputFormat, "set-variable",
+                             "missing arguments after --set-variable");
+      }
+      return 2;
+    }
+    state.lastResult.reset();
+    return runSetVariable(tokens[1], tokens[2], outputFormat);
+  }
+  if (flag == "--unset-variable") {
+    if (tokens.size() < 2) {
+      if (outputFormat == OutputFormat::Text) {
+        std::cerr << RED << "Error: missing arguments after --unset-variable"
+                  << RESET << '\n';
+      } else {
+        printStructuredError(std::cerr, outputFormat, "unset-variable",
+                             "missing arguments after --unset-variable");
+      }
+      return 2;
+    }
+    state.lastResult.reset();
+    return runUnsetVariable(tokens[1], outputFormat);
+  }
+  if (flag == "--report-bug") {
+    state.lastResult.reset();
+    return runReportBug(outputFormat);
   }
   if (flag == "--help") {
     state.lastResult.reset();

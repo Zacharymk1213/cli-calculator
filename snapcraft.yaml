@@ -1,7 +1,7 @@
 name: cli-calculator
 title: CLI Calculator
 base: core22
-version: '1.6'
+version: '1.7'
 license: Apache-2.0
 source-code:
   - https://github.com/Benedek553/cli-calculator
@@ -16,7 +16,8 @@ description: |
 
   * Evaluate arbitrarily long expressions with `+ - * / x :`, parentheses, factorial, and built-in math functions such as `sin`, `cos`, `log`, `sqrt`, `tan`, `exp`, and `sinh`
   * Convert signed integers between binary (`0b`), decimal, and hexadecimal (`0x`) inputs or outputs in one command
-  * Solve linear (`a * x + b = 0`) and quadratic (`a * x^2 + b * x + c = 0`) equations, including complex roots, with guided prompts
+  * Convert measurement units (length, mass, volume, temperature) with CLI flags or guided prompts
+  * Solve linear (`a * x + b = 0`) and quadratic (`a * x^2 + b * x + c = 0`) equations, including complex roots
   * Run matrix workflows (add, subtract, multiply) for arbitrarily sized matrices with validation before each operation
   * Visualize number series by entering them manually or loading CSV columns, previewing the ASCII graph, then exporting a labeled PNG chart
   * Perform prime factorization and divisor lookups optimized for large integers
@@ -27,7 +28,12 @@ description: |
   * `cli-calculator` launches the interactive menu (matrix tools, equation solver, prime factorization, divisors, variable manager, etc.)
   * `cli-calculator --repl` opens an instant read–eval–print loop with history (`:history`, `!<n>`) and autocompletion-like shortcuts
   * `cli-calculator --eval "2*(3+5)"` evaluates expressions headlessly; combine with `--output json|yaml|xml` for script-friendly responses
-  * `cli-calculator --convert 10 16 42`, `--divisors 120`, `--prime-factorization 32768`, and `--square-root 625` provide single-shot utilities without entering the menu
+  * `cli-calculator --convert 10 16 42`, `--unit-convert length m km 1234`, `--divisors 120`, `--prime-factorization 32768`, and `--square-root 625` provide single-shot utilities without entering the menu
+  * `cli-calculator --solve-quadratic 1 -3 2` and `--matrix-add "1 2; 3 4" "5 6; 7 8"` run equation and matrix tools from scripts
+  * `cli-calculator --stats 1 2 3 4 5` summarizes datasets, while `--graph-values graph.png 1 3 2 5` exports a PNG with an ASCII preview
+  * `cli-calculator --graph-csv graph.png data.csv 2 --no-headers` renders a CSV column into a labeled chart
+  * `cli-calculator --set-variable tax_rate 0.27` and `--unset-variable old_value` manage persisted variables without the menu
+  * `cli-calculator --report-bug` opens the issue template in your browser
   * `cli-calculator --batch tasks.txt` executes a list of commands with helper directives (`@set`, `@input`, `@include`, `@if`, `@unset`) so you can automate repetitive calculations
   * Graph utility (menu option 10) walks you through picking manual/CSV data, ASCII preview height, and the PNG filename so you can share charts without leaving the terminal
 

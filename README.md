@@ -115,8 +115,20 @@ cmake --build build --config Release
 - `--repl`: launch a lightweight read-eval-print loop for quick calculations (supports `:history`, `!<n>`, Up/Down-arrow history like Bash, and every CLI flag via `:command`/`--command` inside the session). You can also launch it from the interactive main menu via **11) Launch REPL mode**.
 - `--square-root <value>` / `-sqrt <value>`: compute a single square root (fails for negative inputs).
 - `--convert <from> <to> <value>` / `-c <from> <to> <value>`: convert an integer from one base to another and print the result. Accepted bases are `2`, `10` and `16`.
+- `--unit-convert <category> <from> <to> <value>`: convert measurement units (categories: `length`, `mass`, `volume`, `temperature`; units accept names or symbols).
 - `--prime-factorization <value>` / `-pf <value>`: display the prime factors of the given integer (falls back to `-1` for negatives).
+- `--solve-linear <a> <b>`: solve a linear equation `a*x + b = 0`.
+- `--solve-quadratic <a> <b> <c>`: solve a quadratic equation `a*x^2 + b*x + c = 0`.
+- `--matrix-add <A> <B>`: add matrices (`;` between rows, `,` or spaces between columns).
+- `--matrix-subtract <A> <B>`: subtract matrices (`;` between rows, `,` or spaces between columns).
+- `--matrix-multiply <A> <B>`: multiply matrices (`;` between rows, `,` or spaces between columns).
+- `--stats <values...>` / `--statistics <values...>`: compute summary statistics for a list of values.
+- `--graph-values <output.png> <values...> [--height N]`: render values into a PNG graph (prints an ASCII preview to stdout).
+- `--graph-csv <output.png> <csv-path> <column> [--height N] [--no-headers]`: render a column from a CSV file into a PNG graph.
 - `--variables` / `--list-variables`: print every persisted variable and its value.
+- `--set-variable <name> <value>`: create/update a variable in `vars.toml`.
+- `--unset-variable <name>`: remove a persisted variable.
+- `--report-bug`: open the issue template in your browser.
 - `--batch <file.txt>` / `-b <file.txt>`: execute commands listed in a text file (one CLI invocation per line, comments starting with `#` are ignored). Batch files recognize helper directives such as `@set <variable>` (store the previous numeric result), `@input <variable>` (prompt for a value/expression and store it), `@include <file>` (process another batch file), `@if <expression>` / `@endif` (conditional execution, truthy = non-zero), and `@unset <variable>` (remove a stored variable).
 - `--output <format>`: emit structured responses (`json`, `xml`, or `yaml`) for CLI flags so scripts can parse the calculator output more easily.
 - `--version` / `-v`: display the calculator version and exit.
@@ -182,6 +194,30 @@ Examples
 # Convert a negative hexadecimal value to binary
 ./build/src/calculator --convert 16 2 -0x1A
 # Result: -0b11010
+```
+
+## Examples (new CLI flags)
+
+```bash
+# Convert between units (symbols or names accepted)
+./build/src/calculator --unit-convert length m km 1234
+
+# Solve equations directly
+./build/src/calculator --solve-linear 2 -8
+./build/src/calculator --solve-quadratic 1 -3 2
+
+# Matrix operations (rows separated by ';')
+./build/src/calculator --matrix-add "1 2; 3 4" "5 6; 7 8"
+./build/src/calculator --matrix-multiply "1 2 3; 4 5 6" "7 8; 9 10; 11 12"
+
+# Stats and graphing
+./build/src/calculator --stats 1 2 3 4 5 5
+./build/src/calculator --graph-values graph.png 1 3 2 5 --height 8
+./build/src/calculator --graph-csv graph.png data.csv 2 --no-headers
+
+# Variables without opening the menu
+./build/src/calculator --set-variable tax_rate 0.27
+./build/src/calculator --unset-variable old_value
 ```
 
 ## Contribution

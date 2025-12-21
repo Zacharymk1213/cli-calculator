@@ -14,6 +14,8 @@ set(CORE_SOURCES
     core/matrix.cpp
     core/statistics.cpp
     core/graph_png.cpp
+    core/unit_conversion.cpp
+    core/parse_utils.cpp
 )
 
 set(APP_SOURCES
