@@ -26,15 +26,28 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y cmake build-essential
-          
-      - name: Install vcpkg deps
-        if: runner.os == 'Windows'
-        run: |
-          vcpkg install zlib:x64-windows
 
-      - name: Configure
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DUSE_ZLIB=OFF
+          
+      - name: Setup vcpkg
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-vcpkg@v1
+        with:
+          vcpkgGitCommitId: 7a6a5c4b2d3c6d9f8e1a2b3c4d5e6f7a8b9c0d1e
+      
+      - name: Install ZLIB
+        if: runner.os == 'Windows'
+        run: vcpkg install zlib:x64-windows
+      
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE=${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake
 
       - name: Build
         run: |
