@@ -17,10 +17,6 @@ A full-featured CLI calculator supporting:
 * Prime factorization with variable persistence
 * CLI-only actions without launching the menu
 
-### divisors
-
-A standalone utility that lists all positive divisors of an integer.
-
 ---
 
 ## Quickstart
