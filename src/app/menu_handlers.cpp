@@ -622,6 +622,7 @@ void handleDivisors() {
     long long value = readInteger("Enter an integer (0 allowed): ");
     if (value == 0) {
       std::cout << RED << "Zero has infinitely many divisors." << RESET << '\n';
+      continue;
     } else {
       try {
         std::vector<long long> divisors = calculateDivisors(value);
