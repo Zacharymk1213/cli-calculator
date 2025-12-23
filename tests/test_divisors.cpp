@@ -10,3 +10,6 @@ TEST(DivisorTest, DivideByZero) {
 TEST(DivisorTest, TestDivisors) {
     EXPECT_EQ(calculateDivisors(10), std::vector<long long>({1, 2, 5, 10}));
 }
+TEST(DivisorTest, TestNegativeDivisors) {
+    EXPECT_EQ(calculateDivisors(-10), std::vector<long long>({1, 2, 5, 10}));
+}
