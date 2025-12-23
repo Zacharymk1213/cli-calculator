@@ -74,12 +74,7 @@ jobs:
           C:\msys64\mingw64\bin\libgcc_s_seh-1.dll
           C:\msys64\mingw64\bin\libstdc++-6.dll
           C:\msys64\mingw64\bin\zlib1.dll
-        if-no-files-found: warn
-
-
-
-
-          
+        if-no-files-found: warn 
           
           ${{github.workspace}}/build/src/*.dll          
         if-no-files-found: warn
