@@ -31,6 +31,8 @@ jobs:
           mingw-w64-x86_64-ninja
           mingw-w64-x86_64-pkg-config
           mingw-w64-x86_64-zlib
+          mingw-w64-x86_64-gcc-libs
+          
 
     - name: Configure (MSYS2 / Ninja)
       shell: msys2 {0}
@@ -40,13 +42,6 @@ jobs:
       shell: msys2 {0}
       run: cmake --build build --parallel
 
-    - name: Test (MSYS2 / Ninja)
-      shell: msys2 {0}
-      run: |
-        cd build
-        ctest --output-on-failure
-
-# ...existing code...
     - name: Test (MSYS2 / Ninja)
       shell: msys2 {0}
       run: |
