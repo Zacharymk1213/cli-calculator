@@ -55,5 +55,12 @@ jobs:
           ${{github.workspace}}/build/src/calculator*
           ${{github.workspace}}/build/src/divisors*
           ${{github.workspace}}/build/src/*.exe
+          ${{github.workspace}}/build/src/*.dll
+
+
+
+
+          
+          
           ${{github.workspace}}/build/src/*.dll          
         if-no-files-found: warn
