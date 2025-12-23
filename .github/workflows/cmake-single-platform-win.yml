@@ -47,13 +47,19 @@ jobs:
       run: |
         cd build
         ctest --output-on-failure
-
-    - name: Collect MSYS2 runtime DLLs
-      shell: pwsh
+        
+    - name: Collect all MSYS2 .dll and .exe from /mingw64/bin
+      shell: msys2 {0}
       run: |
-        cp -v -R ${MINGW_PREFIX}/bin/*.exe ${{github.workspace}}/build/src/
-        cp -v -R ${MINGW_PREFIX}/bin/*.dll ${{github.workspace}}/build/src/
-
+        mkdir -p build/src
+        shopt -s nullglob
+        files=(/mingw64/bin/*.dll /mingw64/bin/*.exe)
+        if [ "${#files[@]}" -gt 0 ]; then
+          cp -v "${files[@]}" build/src/
+        else
+          echo "No .dll or .exe files found in /mingw64/bin"
+        fi
+        ls -la build/src
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
