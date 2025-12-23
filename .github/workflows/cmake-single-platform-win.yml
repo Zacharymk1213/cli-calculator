@@ -47,6 +47,21 @@ jobs:
         ctest --output-on-failure
 
 
+    - name: Collect MSYS2 runtime DLLs
+      shell: pwsh
+      run: |
+        $msysBin = 'C:\msys64\mingw64\bin'
+        $dest = "${{ github.workspace }}\build\src"
+        New-Item -ItemType Directory -Path $dest -Force | Out-Null
+        foreach ($dll in 'libgcc_s_seh-1.dll','libstdc++-6.dll','zlib1.dll') {
+          $src = Join-Path $msysBin $dll
+          if (Test-Path $src) {
+            Copy-Item $src -Destination $dest -Force
+          } else {
+            Write-Warning "Missing $src"
+          }
+        }
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -56,6 +71,10 @@ jobs:
           ${{github.workspace}}/build/src/divisors*
           ${{github.workspace}}/build/src/*.exe
           ${{github.workspace}}/build/src/*.dll
+          C:\msys64\mingw64\bin\libgcc_s_seh-1.dll
+          C:\msys64\mingw64\bin\libstdc++-6.dll
+          C:\msys64\mingw64\bin\zlib1.dll
+        if-no-files-found: warn
 
 
 
