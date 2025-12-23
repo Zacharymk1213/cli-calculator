@@ -52,7 +52,7 @@ CliAction makeAction(CliActionType type,
 } // namespace
 
 std::pair<CliParseResult, std::optional<CliParseError>>
-CliParser::parse(int argc, char **argv) const {
+CliParser::parse(int argc, char **argv) {
   CliParseResult result;
 
   for (int i = 1; i < argc; ++i) {
@@ -117,7 +117,7 @@ CliParser::parse(int argc, char **argv) const {
       break;
     }
 
-    if (arg == "--square-root" || arg == "-sqrt") {
+    if (arg == "--square-root" || arg == "--sqrt") {
       if (i + 1 >= argc) {
         std::string message = "missing value after " + arg;
         return {result, makeError(message, "square-root", 1)};
@@ -149,7 +149,7 @@ CliParser::parse(int argc, char **argv) const {
       break;
     }
 
-    if (arg == "--unit-convert") {
+    if (arg == "--unit-convert" || arg == "-uc") {
       if (i + 4 >= argc) {
         std::string message = "missing arguments after " + arg;
         return {result, makeError(message, "unit-convert", 2)};
@@ -172,7 +172,7 @@ CliParser::parse(int argc, char **argv) const {
       break;
     }
 
-    if (arg == "--solve-linear") {
+    if (arg == "--solve-linear" || arg == "-sl") {
       if (i + 2 >= argc) {
         std::string message = "missing arguments after " + arg;
         return {result, makeError(message, "solve-linear", 2)};
@@ -183,7 +183,7 @@ CliParser::parse(int argc, char **argv) const {
       break;
     }
 
-    if (arg == "--solve-quadratic") {
+    if (arg == "--solve-quadratic" || arg == "-sq") {
       if (i + 3 >= argc) {
         std::string message = "missing arguments after " + arg;
         return {result, makeError(message, "solve-quadratic", 2)};
@@ -195,7 +195,36 @@ CliParser::parse(int argc, char **argv) const {
       break;
     }
 
-    if (arg == "--matrix-add") {
+    if (arg == "--solve-cubic" || arg == "-sc") {
+      if (i + 4 >= argc) {
+        std::string message = "missing arguments after " + arg;
+        return {result, makeError(message, "solve-cubic", 2)};
+      }
+      result.action = makeAction(CliActionType::SolveCubic,
+                                 {std::string(argv[i + 1]),
+                                  std::string(argv[i + 2]),
+                                  std::string(argv[i + 3]),
+                                  std::string(argv[i + 4])});
+      break;
+    }
+
+    if (arg == "--solve-linear-system" || arg == "--solve-system" ||
+        arg == "-sls") {
+      if (i + 6 >= argc) {
+        std::string message = "missing arguments after " + arg;
+        return {result, makeError(message, "solve-linear-system", 2)};
+      }
+      result.action = makeAction(CliActionType::SolveLinearSystem,
+                                 {std::string(argv[i + 1]),
+                                  std::string(argv[i + 2]),
+                                  std::string(argv[i + 3]),
+                                  std::string(argv[i + 4]),
+                                  std::string(argv[i + 5]),
+                                  std::string(argv[i + 6])});
+      break;
+    }
+
+    if (arg == "--matrix-add" || arg == "-ma") {
       if (i + 2 >= argc) {
         std::string message = "missing arguments after " + arg;
         return {result, makeError(message, "matrix-add", 2)};
@@ -206,7 +235,7 @@ CliParser::parse(int argc, char **argv) const {
       break;
     }
 
-    if (arg == "--matrix-subtract") {
+    if (arg == "--matrix-subtract" || arg == "-ms") {
       if (i + 2 >= argc) {
         std::string message = "missing arguments after " + arg;
         return {result, makeError(message, "matrix-subtract", 2)};
@@ -217,7 +246,7 @@ CliParser::parse(int argc, char **argv) const {
       break;
     }
 
-    if (arg == "--matrix-multiply") {
+    if (arg == "--matrix-multiply" || arg == "-mm") {
       if (i + 2 >= argc) {
         std::string message = "missing arguments after " + arg;
         return {result, makeError(message, "matrix-multiply", 2)};
@@ -241,7 +270,7 @@ CliParser::parse(int argc, char **argv) const {
       break;
     }
 
-    if (arg == "--graph-values") {
+    if (arg == "--graph-values" || arg == "--graph") {
       std::vector<std::string> params;
       for (int j = i + 1; j < argc; ++j) {
         std::string token(argv[j]);
@@ -254,7 +283,7 @@ CliParser::parse(int argc, char **argv) const {
       break;
     }
 
-    if (arg == "--graph-csv") {
+    if (arg == "--graph-csv" || arg == "--graph-from-csv") {
       std::vector<std::string> params;
       for (int j = i + 1; j < argc; ++j) {
         std::string token(argv[j]);

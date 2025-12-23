@@ -69,6 +69,23 @@ int CalculatorApp::dispatchAction(const CliAction &action,
     }
     return runSolveQuadratic(action.params[0], action.params[1], action.params[2],
                              format);
+  case CliActionType::SolveCubic:
+    if (action.params.size() < 4) {
+      printStructuredError(std::cerr, format, "solve-cubic",
+                           "missing arguments after --solve-cubic");
+      return 2;
+    }
+    return runSolveCubic(action.params[0], action.params[1], action.params[2],
+                         action.params[3], format);
+  case CliActionType::SolveLinearSystem:
+    if (action.params.size() < 6) {
+      printStructuredError(std::cerr, format, "solve-linear-system",
+                           "missing arguments after --solve-linear-system");
+      return 2;
+    }
+    return runSolveLinearSystem(action.params[0], action.params[1],
+                                action.params[2], action.params[3],
+                                action.params[4], action.params[5], format);
   case CliActionType::MatrixAdd:
     if (action.params.size() < 2) {
       printStructuredError(std::cerr, format, "matrix-add",

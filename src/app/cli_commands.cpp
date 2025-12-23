@@ -1027,6 +1027,366 @@ int runSolveQuadratic(const std::string &aStr, const std::string &bStr,
   return 0;
 }
 
+int runSolveCubic(const std::string &aStr, const std::string &bStr,
+                  const std::string &cStr, const std::string &dStr,
+                  OutputFormat outputFormat) {
+  double a = 0.0;
+  double b = 0.0;
+  double c = 0.0;
+  double d = 0.0;
+  std::string parseError;
+  if (!resolveDoubleArgument(aStr, a, parseError) ||
+      !resolveDoubleArgument(bStr, b, parseError) ||
+      !resolveDoubleArgument(cStr, c, parseError) ||
+      !resolveDoubleArgument(dStr, d, parseError)) {
+    if (outputFormat == OutputFormat::Text) {
+      std::cerr << RED << "Error: " << parseError << RESET << '\n';
+    } else {
+      printStructuredError(std::cerr, outputFormat, "solve-cubic", parseError);
+    }
+    return 1;
+  }
+
+  constexpr double epsilon = 1e-9;
+  if (isApproximatelyZero(a, epsilon)) {
+    if (outputFormat == OutputFormat::Text) {
+      std::cout << YELLOW
+                << "Coefficient 'a' is zero; falling back to a quadratic equation."
+                << RESET << '\n';
+    }
+
+    double disc = c * c - 4.0 * b * d;
+    if (isApproximatelyZero(b, epsilon)) {
+      if (isApproximatelyZero(c, epsilon)) {
+        if (isApproximatelyZero(d, epsilon)) {
+          if (outputFormat == OutputFormat::Text) {
+            std::cout << CYAN << "Every real number is a solution." << RESET
+                      << '\n';
+          } else {
+            printStructuredSuccess(std::cout, outputFormat, "solve-cubic",
+                                   "\"fallback\":true,\"status\":\"all-real\"",
+                                   "<fallback>true</fallback><status>all-real</status>",
+                                   "fallback: true\nstatus: all-real");
+          }
+          return 0;
+        }
+        if (outputFormat == OutputFormat::Text) {
+          std::cout << RED << "No solution exists for this equation." << RESET
+                    << '\n';
+        } else {
+          printStructuredSuccess(std::cout, outputFormat, "solve-cubic",
+                                 "\"fallback\":true,\"status\":\"none\"",
+                                 "<fallback>true</fallback><status>none</status>",
+                                 "fallback: true\nstatus: none");
+        }
+        return 0;
+      }
+      double result = -d / c;
+      if (outputFormat == OutputFormat::Text) {
+        std::cout << GREEN << "Solution: x = " << RESET << result << '\n';
+      } else {
+        std::ostringstream jsonPayload;
+        jsonPayload << "\"fallback\":true,\"status\":\"single\",\"x\":"
+                    << result;
+        std::ostringstream xmlPayload;
+        xmlPayload << "<fallback>true</fallback><status>single</status><x>"
+                   << result << "</x>";
+        std::ostringstream yamlPayload;
+        yamlPayload << "fallback: true\nstatus: single\nx: " << result;
+        printStructuredSuccess(std::cout, outputFormat, "solve-cubic",
+                               jsonPayload.str(), xmlPayload.str(),
+                               yamlPayload.str());
+      }
+      return 0;
+    }
+
+    if (disc > epsilon) {
+      double sqrtDisc = std::sqrt(disc);
+      double denom = 2.0 * b;
+      double x1 = (-c + sqrtDisc) / denom;
+      double x2 = (-c - sqrtDisc) / denom;
+      if (outputFormat == OutputFormat::Text) {
+        std::cout << CYAN << "Two real solutions:" << RESET << '\n';
+        std::cout << GREEN << " x1 = " << RESET << x1 << '\n';
+        std::cout << GREEN << " x2 = " << RESET << x2 << '\n';
+      } else {
+        std::ostringstream jsonPayload;
+        jsonPayload << "\"fallback\":true,\"status\":\"two-real\",\"solutions\":["
+                    << x1 << ',' << x2 << "]";
+        std::ostringstream xmlPayload;
+        xmlPayload << "<fallback>true</fallback><status>two-real</status><solutions>"
+                   << "<value>" << x1 << "</value><value>" << x2
+                   << "</value></solutions>";
+        std::ostringstream yamlPayload;
+        yamlPayload << "fallback: true\nstatus: two-real\nsolutions:\n  - "
+                    << x1 << "\n  - " << x2;
+        printStructuredSuccess(std::cout, outputFormat, "solve-cubic",
+                               jsonPayload.str(), xmlPayload.str(),
+                               yamlPayload.str());
+      }
+      return 0;
+    }
+
+    if (isApproximatelyZero(disc, epsilon)) {
+      double root = -c / (2.0 * b);
+      if (outputFormat == OutputFormat::Text) {
+        std::cout << GREEN << "One real solution (double root): x = " << RESET
+                  << root << '\n';
+      } else {
+        std::ostringstream jsonPayload;
+        jsonPayload << "\"fallback\":true,\"status\":\"double-root\",\"x\":"
+                    << root;
+        std::ostringstream xmlPayload;
+        xmlPayload << "<fallback>true</fallback><status>double-root</status><x>"
+                   << root << "</x>";
+        std::ostringstream yamlPayload;
+        yamlPayload << "fallback: true\nstatus: double-root\nx: " << root;
+        printStructuredSuccess(std::cout, outputFormat, "solve-cubic",
+                               jsonPayload.str(), xmlPayload.str(),
+                               yamlPayload.str());
+      }
+      return 0;
+    }
+
+    std::complex<double> sqrtDisc =
+        std::sqrt(std::complex<double>(disc, 0.0));
+    std::complex<double> denom(2.0 * b, 0.0);
+    std::complex<double> x1 = (-c + sqrtDisc) / denom;
+    std::complex<double> x2 = (-c - sqrtDisc) / denom;
+    if (outputFormat == OutputFormat::Text) {
+      auto printComplex = [](const std::complex<double> &value) {
+        double realPart = value.real();
+        double imagPart = value.imag();
+        std::cout << GREEN << realPart << RESET;
+        if (!isApproximatelyZero(imagPart)) {
+          if (imagPart >= 0) {
+            std::cout << " + " << GREEN << imagPart << RESET << "i";
+          } else {
+            std::cout << " - " << GREEN << std::abs(imagPart) << RESET << "i";
+          }
+        }
+      };
+
+      std::cout << "Two complex solutions:\n x1 = ";
+      printComplex(x1);
+      std::cout << "\n x2 = ";
+      printComplex(x2);
+      std::cout << '\n';
+    } else {
+      std::ostringstream jsonPayload;
+      jsonPayload << "\"fallback\":true,\"status\":\"complex\",\"solutions\":["
+                  << "{\"real\":" << x1.real() << ",\"imag\":" << x1.imag()
+                  << "},{\"real\":" << x2.real() << ",\"imag\":" << x2.imag()
+                  << "}]";
+      std::ostringstream xmlPayload;
+      xmlPayload << "<fallback>true</fallback><status>complex</status><solutions>"
+                 << "<solution><real>" << x1.real() << "</real><imag>"
+                 << x1.imag() << "</imag></solution>"
+                 << "<solution><real>" << x2.real() << "</real><imag>"
+                 << x2.imag() << "</imag></solution></solutions>";
+      std::ostringstream yamlPayload;
+      yamlPayload << "fallback: true\nstatus: complex\nsolutions:\n  - real: "
+                  << x1.real() << "\n    imag: " << x1.imag()
+                  << "\n  - real: " << x2.real() << "\n    imag: " << x2.imag();
+      printStructuredSuccess(std::cout, outputFormat, "solve-cubic",
+                             jsonPayload.str(), xmlPayload.str(),
+                             yamlPayload.str());
+    }
+    return 0;
+  }
+
+  double p = (3.0 * a * c - b * b) / (3.0 * a * a);
+  double q =
+      (2.0 * b * b * b - 9.0 * a * b * c + 27.0 * a * a * d) /
+      (27.0 * a * a * a);
+  double discriminant = (q * q) / 4.0 + (p * p * p) / 27.0;
+  std::complex<double> sqrtDisc =
+      std::sqrt(std::complex<double>(discriminant, 0.0));
+  std::complex<double> u = std::pow(-q / 2.0 + sqrtDisc, 1.0 / 3.0);
+  std::complex<double> v = std::pow(-q / 2.0 - sqrtDisc, 1.0 / 3.0);
+  std::complex<double> omega(-0.5, std::sqrt(3.0) / 2.0);
+  std::complex<double> omegaConj = std::conj(omega);
+  double shift = -b / (3.0 * a);
+
+  std::complex<double> x1 = u + v + shift;
+  std::complex<double> x2 = u * omega + v * omegaConj + shift;
+  std::complex<double> x3 = u * omegaConj + v * omega + shift;
+
+  auto isReal = [&](const std::complex<double> &value) {
+    return isApproximatelyZero(value.imag(), 1e-8);
+  };
+  int realCount = 0;
+  realCount += isReal(x1) ? 1 : 0;
+  realCount += isReal(x2) ? 1 : 0;
+  realCount += isReal(x3) ? 1 : 0;
+
+  if (outputFormat == OutputFormat::Text) {
+    auto printComplex = [](const std::complex<double> &value) {
+      double realPart = value.real();
+      double imagPart = value.imag();
+      std::cout << GREEN << realPart << RESET;
+      if (!isApproximatelyZero(imagPart, 1e-8)) {
+        if (imagPart >= 0) {
+          std::cout << " + " << GREEN << imagPart << RESET << "i";
+        } else {
+          std::cout << " - " << GREEN << std::abs(imagPart) << RESET << "i";
+        }
+      }
+    };
+
+    if (realCount == 3) {
+      std::cout << CYAN << "Three real solutions:" << RESET << '\n';
+      std::cout << GREEN << " x1 = " << RESET << x1.real() << '\n';
+      std::cout << GREEN << " x2 = " << RESET << x2.real() << '\n';
+      std::cout << GREEN << " x3 = " << RESET << x3.real() << '\n';
+    } else if (realCount == 1) {
+      std::cout << CYAN << "One real solution and two complex solutions:"
+                << RESET << '\n';
+      std::cout << " x1 = ";
+      printComplex(x1);
+      std::cout << "\n x2 = ";
+      printComplex(x2);
+      std::cout << "\n x3 = ";
+      printComplex(x3);
+      std::cout << '\n';
+    } else {
+      std::cout << CYAN << "Solutions:" << RESET << '\n';
+      std::cout << " x1 = ";
+      printComplex(x1);
+      std::cout << "\n x2 = ";
+      printComplex(x2);
+      std::cout << "\n x3 = ";
+      printComplex(x3);
+      std::cout << '\n';
+    }
+    return 0;
+  }
+
+  std::string status = "mixed";
+  if (realCount == 3) {
+    status = "three-real";
+  } else if (realCount == 1) {
+    status = "one-real-two-complex";
+  }
+
+  if (realCount == 3) {
+    std::ostringstream jsonPayload;
+    jsonPayload << "\"status\":\"" << status << "\",\"solutions\":["
+                << x1.real() << ',' << x2.real() << ',' << x3.real() << "]";
+    std::ostringstream xmlPayload;
+    xmlPayload << "<status>" << status << "</status><solutions>"
+               << "<value>" << x1.real() << "</value><value>" << x2.real()
+               << "</value><value>" << x3.real() << "</value></solutions>";
+    std::ostringstream yamlPayload;
+    yamlPayload << "status: " << status << "\nsolutions:\n  - " << x1.real()
+                << "\n  - " << x2.real() << "\n  - " << x3.real();
+    printStructuredSuccess(std::cout, outputFormat, "solve-cubic",
+                           jsonPayload.str(), xmlPayload.str(),
+                           yamlPayload.str());
+  } else {
+    std::ostringstream jsonPayload;
+    jsonPayload << "\"status\":\"" << status << "\",\"solutions\":["
+                << "{\"real\":" << x1.real() << ",\"imag\":" << x1.imag()
+                << "},{\"real\":" << x2.real() << ",\"imag\":" << x2.imag()
+                << "},{\"real\":" << x3.real() << ",\"imag\":" << x3.imag()
+                << "}]";
+    std::ostringstream xmlPayload;
+    xmlPayload << "<status>" << status << "</status><solutions>"
+               << "<solution><real>" << x1.real() << "</real><imag>"
+               << x1.imag() << "</imag></solution>"
+               << "<solution><real>" << x2.real() << "</real><imag>"
+               << x2.imag() << "</imag></solution>"
+               << "<solution><real>" << x3.real() << "</real><imag>"
+               << x3.imag() << "</imag></solution></solutions>";
+    std::ostringstream yamlPayload;
+    yamlPayload << "status: " << status
+                << "\nsolutions:\n  - real: " << x1.real()
+                << "\n    imag: " << x1.imag()
+                << "\n  - real: " << x2.real() << "\n    imag: " << x2.imag()
+                << "\n  - real: " << x3.real() << "\n    imag: " << x3.imag();
+    printStructuredSuccess(std::cout, outputFormat, "solve-cubic",
+                           jsonPayload.str(), xmlPayload.str(),
+                           yamlPayload.str());
+  }
+  return 0;
+}
+
+int runSolveLinearSystem(const std::string &a1Str, const std::string &b1Str,
+                         const std::string &c1Str, const std::string &a2Str,
+                         const std::string &b2Str, const std::string &c2Str,
+                         OutputFormat outputFormat) {
+  double a1 = 0.0;
+  double b1 = 0.0;
+  double c1 = 0.0;
+  double a2 = 0.0;
+  double b2 = 0.0;
+  double c2 = 0.0;
+  std::string parseError;
+  if (!resolveDoubleArgument(a1Str, a1, parseError) ||
+      !resolveDoubleArgument(b1Str, b1, parseError) ||
+      !resolveDoubleArgument(c1Str, c1, parseError) ||
+      !resolveDoubleArgument(a2Str, a2, parseError) ||
+      !resolveDoubleArgument(b2Str, b2, parseError) ||
+      !resolveDoubleArgument(c2Str, c2, parseError)) {
+    if (outputFormat == OutputFormat::Text) {
+      std::cerr << RED << "Error: " << parseError << RESET << '\n';
+    } else {
+      printStructuredError(std::cerr, outputFormat, "solve-linear-system",
+                           parseError);
+    }
+    return 1;
+  }
+
+  double determinant = a1 * b2 - a2 * b1;
+  constexpr double epsilon = 1e-9;
+  if (isApproximatelyZero(determinant, epsilon)) {
+    bool consistent =
+        isApproximatelyZero(a1 * c2 - a2 * c1, epsilon) &&
+        isApproximatelyZero(b1 * c2 - b2 * c1, epsilon);
+    if (outputFormat == OutputFormat::Text) {
+      if (consistent) {
+        std::cout << CYAN
+                  << "Infinitely many solutions (dependent equations)."
+                  << RESET << '\n';
+      } else {
+        std::cout << RED << "No solution exists for this system." << RESET
+                  << '\n';
+      }
+    } else {
+      std::string status = consistent ? "infinite" : "none";
+      std::ostringstream jsonPayload;
+      jsonPayload << "\"status\":\"" << status << "\"";
+      std::ostringstream xmlPayload;
+      xmlPayload << "<status>" << status << "</status>";
+      std::ostringstream yamlPayload;
+      yamlPayload << "status: " << status;
+      printStructuredSuccess(std::cout, outputFormat, "solve-linear-system",
+                             jsonPayload.str(), xmlPayload.str(),
+                             yamlPayload.str());
+    }
+    return 0;
+  }
+
+  double x = (c1 * b2 - c2 * b1) / determinant;
+  double y = (a1 * c2 - a2 * c1) / determinant;
+  if (outputFormat == OutputFormat::Text) {
+    std::cout << GREEN << "Solution: x = " << RESET << x << '\n';
+    std::cout << GREEN << "Solution: y = " << RESET << y << '\n';
+  } else {
+    std::ostringstream jsonPayload;
+    jsonPayload << "\"status\":\"single\",\"x\":" << x << ",\"y\":" << y;
+    std::ostringstream xmlPayload;
+    xmlPayload << "<status>single</status><x>" << x << "</x><y>" << y
+               << "</y>";
+    std::ostringstream yamlPayload;
+    yamlPayload << "status: single\nx: " << x << "\ny: " << y;
+    printStructuredSuccess(std::cout, outputFormat, "solve-linear-system",
+                           jsonPayload.str(), xmlPayload.str(),
+                           yamlPayload.str());
+  }
+  return 0;
+}
+
 int runMatrixAdd(const std::string &lhsStr, const std::string &rhsStr,
                  OutputFormat outputFormat) {
   Matrix lhs;
@@ -1786,6 +2146,10 @@ int runHelp(OutputFormat outputFormat) {
       "  --solve-linear <a> <b>        Solve a linear equation a*x + b = 0.\n"
       "  --solve-quadratic <a> <b> <c> Solve a quadratic equation "
       "a*x^2 + b*x + c = 0.\n"
+      "  --solve-cubic <a> <b> <c> <d> Solve a cubic equation "
+      "a*x^3 + b*x^2 + c*x + d = 0.\n"
+      "  --solve-linear-system <a1> <b1> <c1> <a2> <b2> <c2>  Solve a 2x2 "
+      "linear system.\n"
       "  --matrix-add <A> <B>          Add matrices (rows ';', columns ',' or "
       "spaces).\n"
       "  --matrix-subtract <A> <B>     Subtract matrices (rows ';', columns "
@@ -1832,6 +2196,10 @@ int runHelp(OutputFormat outputFormat) {
                  "a*x + b = 0.\n";
     std::cout << "  --solve-quadratic <a> <b> <c> Solve a quadratic equation "
                  "a*x^2 + b*x + c = 0.\n";
+    std::cout << "  --solve-cubic <a> <b> <c> <d> Solve a cubic equation "
+                 "a*x^3 + b*x^2 + c*x + d = 0.\n";
+    std::cout << "  --solve-linear-system <a1> <b1> <c1> <a2> <b2> <c2>  "
+                 "Solve a 2x2 linear system.\n";
     std::cout << "  --matrix-add <A> <B>          Add matrices (rows ';', "
                  "columns ',' or spaces).\n";
     std::cout << "  --matrix-subtract <A> <B>     Subtract matrices (rows ';', "

@@ -17,6 +17,8 @@ enum class CliActionType {
   PrimeFactorization,
   SolveLinear,
   SolveQuadratic,
+  SolveCubic,
+  SolveLinearSystem,
   MatrixAdd,
   MatrixSubtract,
   MatrixMultiply,
@@ -53,6 +55,6 @@ struct CliParseError {
 
 class CliParser {
 public:
-  std::pair<CliParseResult, std::optional<CliParseError>>
-  parse(int argc, char **argv) const;
+  static std::pair<CliParseResult, std::optional<CliParseError>>
+  parse(int argc, char **argv);
 };

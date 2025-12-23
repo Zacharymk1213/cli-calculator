@@ -74,6 +74,8 @@ enum class CommandKind {
   PrimeFactorization,
   SolveLinear,
   SolveQuadratic,
+  SolveCubic,
+  SolveLinearSystem,
   MatrixAdd,
   MatrixSubtract,
   MatrixMultiply,
@@ -357,6 +359,15 @@ std::optional<ParsedCommand> interpretCommand(const RawCommand &raw) {
   }
   if (canonical == "solve-quadratic" || canonical == "solvequadratic") {
     parsed.kind = CommandKind::SolveQuadratic;
+    return parsed;
+  }
+  if (canonical == "solve-cubic" || canonical == "solvecubic") {
+    parsed.kind = CommandKind::SolveCubic;
+    return parsed;
+  }
+  if (canonical == "solve-linear-system" || canonical == "solve-system" ||
+      canonical == "solvelinearsystem" || canonical == "solvesystem") {
+    parsed.kind = CommandKind::SolveLinearSystem;
     return parsed;
   }
   if (canonical == "matrix-add" || canonical == "matrixadd") {
@@ -680,6 +691,27 @@ int runRepl(OutputFormat outputFormat) {
           }
           runSolveQuadratic(parsed->args[0], parsed->args[1], parsed->args[2],
                             OutputFormat::Text);
+          break;
+        case CommandKind::SolveCubic:
+          if (parsed->args.size() != 4) {
+            std::cout << YELLOW << "Usage: :solve-cubic <a> <b> <c> <d>"
+                      << RESET << '\n';
+            break;
+          }
+          runSolveCubic(parsed->args[0], parsed->args[1], parsed->args[2],
+                        parsed->args[3], OutputFormat::Text);
+          break;
+        case CommandKind::SolveLinearSystem:
+          if (parsed->args.size() != 6) {
+            std::cout << YELLOW
+                      << "Usage: :solve-linear-system <a1> <b1> <c1> <a2> <b2> <c2>"
+                      << RESET << '\n';
+            break;
+          }
+          runSolveLinearSystem(parsed->args[0], parsed->args[1],
+                               parsed->args[2], parsed->args[3],
+                               parsed->args[4], parsed->args[5],
+                               OutputFormat::Text);
           break;
         case CommandKind::MatrixAdd:
           if (parsed->args.size() != 2) {

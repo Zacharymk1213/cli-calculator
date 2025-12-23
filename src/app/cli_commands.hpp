@@ -21,6 +21,13 @@ int runSolveLinear(const std::string &aStr, const std::string &bStr,
                    OutputFormat outputFormat);
 int runSolveQuadratic(const std::string &aStr, const std::string &bStr,
                       const std::string &cStr, OutputFormat outputFormat);
+int runSolveCubic(const std::string &aStr, const std::string &bStr,
+                  const std::string &cStr, const std::string &dStr,
+                  OutputFormat outputFormat);
+int runSolveLinearSystem(const std::string &a1Str, const std::string &b1Str,
+                         const std::string &c1Str, const std::string &a2Str,
+                         const std::string &b2Str, const std::string &c2Str,
+                         OutputFormat outputFormat);
 int runMatrixAdd(const std::string &lhsStr, const std::string &rhsStr,
                  OutputFormat outputFormat);
 int runMatrixSubtract(const std::string &lhsStr, const std::string &rhsStr,

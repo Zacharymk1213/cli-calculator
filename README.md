@@ -82,7 +82,7 @@ cmake --build build --config Release
 | Expression evaluation    | Complex expressions with `+ - * / x :` operators, parentheses, `sin`, `cos`, `log`, and factorial (`!`). Supports floating-point operations and user-defined variables read from `vars.toml`. |
 | Number-base conversion   | Accepts binary (`0b`), decimal, and hexadecimal (`0x`) inputs and converts between them; sign handling included. |
 | Measurement conversions  | Converts between common units of length, mass, volume, and temperature directly from the Conversion Tools menu. |
-| Equation solver          | Solves linear (`a * x + b = 0`) and quadratic (`a * x^2 + b * x + c = 0`) equations, including complex roots. |
+| Equation solver          | Solves linear, quadratic, cubic (`a * x^3 + b * x^2 + c * x + d = 0`) equations, plus 2x2 linear systems, including complex roots. |
 | Matrix operations        | Adds, subtracts, or multiplies matrices of arbitrary size with guided prompts that validate dimensions before computing. |
 | Divisor search           | Produces a sorted list of positive divisors for any integer (except 0). |
 | Prime factorization      | Breaks positive integers into their prime powers, displays them in readable form (optionally starting with `-1` for negatives), and stores the factored integer in the `prime_factorization` variable. |
@@ -96,7 +96,7 @@ cmake --build build --config Release
 - `src/core/` shared logic:
   - `expression.*`: tokenizes and evaluates expressions (functions, factorial, operators).
   - `numeral_conversion.*`: parsing/formatting signed integers between bases with prefixes.
-  - `equations.*`: prints solutions for linear and quadratic equations.
+  - `equations.*`: prints solutions for linear, quadratic, cubic equations, plus 2x2 linear systems.
   - `input.*`: reusable console input helpers (prompts, validation).
   - `math_utils.*`: floating-point helpers reused across modules.
   - `divisors_lib.*`: shared divisor calculation used by both executables.
@@ -119,6 +119,8 @@ cmake --build build --config Release
 - `--prime-factorization <value>` / `-pf <value>`: display the prime factors of the given integer (falls back to `-1` for negatives).
 - `--solve-linear <a> <b>`: solve a linear equation `a*x + b = 0`.
 - `--solve-quadratic <a> <b> <c>`: solve a quadratic equation `a*x^2 + b*x + c = 0`.
+- `--solve-cubic <a> <b> <c> <d>`: solve a cubic equation `a*x^3 + b*x^2 + c*x + d = 0`.
+- `--solve-linear-system <a1> <b1> <c1> <a2> <b2> <c2>`: solve a 2x2 linear system.
 - `--matrix-add <A> <B>`: add matrices (`;` between rows, `,` or spaces between columns).
 - `--matrix-subtract <A> <B>`: subtract matrices (`;` between rows, `,` or spaces between columns).
 - `--matrix-multiply <A> <B>`: multiply matrices (`;` between rows, `,` or spaces between columns).
@@ -205,6 +207,8 @@ Examples
 # Solve equations directly
 ./build/src/calculator --solve-linear 2 -8
 ./build/src/calculator --solve-quadratic 1 -3 2
+./build/src/calculator --solve-cubic 1 -6 11 -6
+./build/src/calculator --solve-linear-system 1 1 3 2 -1 0
 
 # Matrix operations (rows separated by ';')
 ./build/src/calculator --matrix-add "1 2; 3 4" "5 6; 7 8"
