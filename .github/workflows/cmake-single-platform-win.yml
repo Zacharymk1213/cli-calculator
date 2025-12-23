@@ -48,7 +48,7 @@ jobs:
         cd build
         ctest --output-on-failure
         
-    - name: Collect all MSYS2 .dll and .exe from /mingw64/bin
+    - name: Collect all required MSYS2 .dll and .exe files from /mingw64/bin
       shell: msys2 {0}
       run: |
         mkdir -p build/src
