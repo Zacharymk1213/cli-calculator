@@ -68,8 +68,12 @@ jobs:
         path: |
           ${{github.workspace}}/build/src/calculator*
           ${{github.workspace}}/build/src/divisors*
-          ${{github.workspace}}/build/src/*.exe
-          ${{github.workspace}}/build/src/*.dll
+          ${{github.workspace}}/build/src/libgcc_s_seh-1.dll
+          ${{github.workspace}}/build/src/zlib1.dll
+          ${{github.workspace}}/build/src/libstdc++-6.dll
+
+
+          
         if-no-files-found: warn
 
 
