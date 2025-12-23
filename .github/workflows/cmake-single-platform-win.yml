@@ -48,82 +48,19 @@ jobs:
         cd build
         ctest --output-on-failure
 
-    - name: Locate MSYS2 runtime DLLs (PowerShell)
-      shell: pwsh
-      run: |
-        $dlls = 'libgcc_s_seh-1.dll','libstdc++-6.dll','zlib1.dll'
-        $candidates = @(
-          'C:\msys64\mingw64\bin',
-          'C:\msys64\mingw32\bin',
-          'C:\msys64\usr\bin',
-          'C:\msys64\usr\mingw64\bin',
-          'C:\msys64\usr\mingw32\bin'
-        )
-        foreach ($dll in $dlls) {
-          Write-Output "Searching for $dll..."
-          $foundAny = $false
-          foreach ($p in $candidates) {
-            $path = Join-Path $p $dll
-            if (Test-Path $path) {
-              Write-Output "Found: $path"
-              $foundAny = $true
-            }
-          }
-          if (-not $foundAny) {
-            Write-Output "Not found in common locations; performing recursive search under C:\msys64 (may take a moment)..."
-            Get-ChildItem -Path C:\msys64 -Filter $dll -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Write-Output "Found: $($_.FullName)" }
-          }
-        }
-        Write-Output "Searching with where.exe (may search entire C:):"
-        foreach ($dll in $dlls) {
-          try {
-            $w = & where.exe /R C:\ $dll 2>$null
-            if ($w) { Write-Output "where.exe found $dll at:"; $w | ForEach-Object { Write-Output "  $_" } }
-          } catch {}
-        }
-
-    - name: List MSYS2 package files (MSYS2)
-      shell: msys2 {0}
-      run: |
-        echo "Installed mingw packages (summary):"
-        pacman -Qe | grep mingw || true
-        echo ""
-        echo "Files from mingw-w64-x86_64-zlib:"
-        pacman -Ql mingw-w64-x86_64-zlib || true
-        echo ""
-        echo "Files from mingw-w64-x86_64-gcc (search for libstdc/libgcc):"
-        pacman -Ql mingw-w64-x86_64-gcc | grep -iE 'libstdc|libgcc' || true
-        echo ""
-        echo "Listing matching files in /mingw64/bin:"
-        ls /mingw64/bin | grep -E 'libgcc|libstdc|zlib' || true
-
     - name: Collect MSYS2 runtime DLLs
       shell: pwsh
       run: |
-        $dlls = 'libgcc_s_seh-1.dll','libstdc++-6.dll','zlib1.dll'
-        $candidates = @('C:\msys64\mingw64\bin','C:\msys64\mingw32\bin','C:\msys64\usr\bin')
+        $msysBin = 'C:\msys64\mingw64\bin'
         $dest = "${{ github.workspace }}\build\src"
         New-Item -ItemType Directory -Path $dest -Force | Out-Null
-        foreach ($dll in $dlls) {
-          $copied = $false
-          foreach ($p in $candidates) {
-            $src = Join-Path $p $dll
-            if (Test-Path $src) {
-              Copy-Item $src -Destination $dest -Force
-              Write-Output "Copied $src -> $dest"
-              $copied = $true
-              break
-            }
-          }
-          if (-not $copied) {
-            Write-Output "Attempting recursive search for $dll under C:\msys64..."
-            $found = Get-ChildItem -Path C:\msys64 -Filter $dll -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
-            if ($found) {
-              Copy-Item $found -Destination $dest -Force
-              Write-Output "Copied $found -> $dest"
-            } else {
-              Write-Warning "$dll not found"
-            }
+        foreach ($dll in 'libgcc_s_seh-1.dll','libstdc++-6.dll','zlib1.dll') {
+          $src = Join-Path $msysBin $dll
+          if (Test-Path $src) {
+            Copy-Item $src -Destination $dest -Force
+            Write-Output "Copied $src -> $dest"
+          } else {
+            Write-Warning "$src not found"
           }
         }
 
@@ -136,8 +73,8 @@ jobs:
           ${{github.workspace}}/build/src/divisors*
           ${{github.workspace}}/build/src/*.exe
           ${{github.workspace}}/build/src/*.dll
-          C:\msys64\mingw64\bin\libgcc_s_seh-1.dll
-          C:\msys64\mingw64\bin\libstdc++-6.dll
-          C:\msys64\mingw64\bin\zlib1.dll
+        if-no-files-found: warn
+
+
         if-no-files-found: warn 
 
