@@ -15,6 +15,8 @@ add_executable(run_tests
     test_conversion.cpp
     test_equations.cpp
     test_errors.cpp
+    test_divisors.cpp
+    test_unit_conversions.cpp
 )
 
 target_link_libraries(run_tests

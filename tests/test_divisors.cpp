@@ -1,0 +1,12 @@
+#include <gtest/gtest.h>
+#include <stdexcept>
+
+#include "core/divisors.hpp"
+
+
+TEST(DivisorTest, DivideByZero) {
+    EXPECT_THROW(calculateDivisors(0), std::invalid_argument);
+}
+TEST(DivisorTest, TestDivisors) {
+    EXPECT_EQ(calculateDivisors(10), std::vector<long long>({1, 2, 5, 10}));
+}
