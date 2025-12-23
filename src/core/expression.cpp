@@ -13,7 +13,7 @@ namespace {
 bool isOperatorChar(char ch) {
   ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
   return ch == '+' || ch == '-' || ch == '*' || ch == 'x' || ch == ':' ||
-         ch == '/';
+         ch == '/' || ch == '^';
 }
 
 char normalizeOperator(char ch) {
@@ -287,10 +287,17 @@ int precedence(char op) {
   if (op == '*' || op == '/') {
     return 2;
   }
-  if (op == '!') {
+  if (op == '^') {
     return 3;
   }
+  if (op == '!') {
+    return 4;
+  }
   throw std::invalid_argument("Unknown operator encountered.");
+}
+
+bool isRightAssociative(char op) {
+  return op == '^';
 }
 
 std::vector<Token> toRpn(const std::vector<Token> &tokens) {
@@ -309,8 +316,15 @@ std::vector<Token> toRpn(const std::vector<Token> &tokens) {
       stack.push_back(token);
       break;
     case Token::Type::Operator:
-      while (!stack.empty() && stack.back().type == Token::Type::Operator &&
-             precedence(stack.back().op) >= precedence(token.op)) {
+      while (!stack.empty() && stack.back().type == Token::Type::Operator) {
+        int stackPrecedence = precedence(stack.back().op);
+        int tokenPrecedence = precedence(token.op);
+        bool shouldPop = isRightAssociative(token.op)
+                             ? stackPrecedence > tokenPrecedence
+                             : stackPrecedence >= tokenPrecedence;
+        if (!shouldPop) {
+          break;
+        }
         output.push_back(stack.back());
         stack.pop_back();
       }
@@ -394,6 +408,9 @@ double evaluateExpression(const std::string &expression,
             throw std::runtime_error("Division by zero in expression.");
           }
           result = lhs / rhs;
+          break;
+        case '^':
+          result = std::pow(lhs, rhs);
           break;
         default:
           throw std::invalid_argument("Unknown operator in expression.");

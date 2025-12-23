@@ -79,7 +79,7 @@ cmake --build build --config Release
 
 | Feature                  | Description |
 | ------------------------ | ----------- |
-| Expression evaluation    | Complex expressions with `+ - * / x :` operators, parentheses, `sin`, `cos`, `log`, and factorial (`!`). Supports floating-point operations and user-defined variables read from `vars.toml`. |
+| Expression evaluation    | Complex expressions with `+ - * / x : ^` operators, parentheses, `sin`, `cos`, `log`, and factorial (`!`). Supports floating-point operations and user-defined variables read from `vars.toml`. |
 | Number-base conversion   | Accepts binary (`0b`), decimal, and hexadecimal (`0x`) inputs and converts between them; sign handling included. |
 | Measurement conversions  | Converts between common units of length, mass, volume, and temperature directly from the Conversion Tools menu. |
 | Equation solver          | Solves linear, quadratic, cubic (`a * x^3 + b * x^2 + c * x + d = 0`) equations, plus 2x2 linear systems, including complex roots. |
