@@ -51,18 +51,9 @@ jobs:
     - name: Collect MSYS2 runtime DLLs
       shell: pwsh
       run: |
-        $msysBin = 'C:\msys64\mingw64\bin'
-        $dest = "${{ github.workspace }}\build\src"
-        New-Item -ItemType Directory -Path $dest -Force | Out-Null
-        foreach ($dll in 'libgcc_s_seh-1.dll','libstdc++-6.dll','zlib1.dll') {
-          $src = Join-Path $msysBin $dll
-          if (Test-Path $src) {
-            Copy-Item $src -Destination $dest -Force
-            Write-Output "Copied $src -> $dest"
-          } else {
-            Write-Warning "$src not found"
-          }
-        }
+        cp -v -R ${MINGW_PREFIX}/bin/*.exe ${{github.workspace}}/build/src/
+        cp -v -R ${MINGW_PREFIX}/bin/*.dll ${{github.workspace}}/build/src/
+
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
