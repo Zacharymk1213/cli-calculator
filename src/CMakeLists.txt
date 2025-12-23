@@ -62,6 +62,12 @@ if(MSVC)
   target_compile_options(divisors PRIVATE /W4)
   target_compile_options(calculator PRIVATE /W4)
 endif()
+option(USE_ZLIB "Enable ZLIB support" ON)
+
+if (USE_ZLIB)
+  find_package(ZLIB REQUIRED)
+endif()
+
 enable_testing()
 
 set(CPACK_PACKAGE_NAME "cli-calculator")
