@@ -21,8 +21,37 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Setup MSYS2
-      # You may pin to the exact commit or the version.
-      # uses: msys2/setup-msys2@4f806de0a5a7294ffabaff804b38a9b435a73bda
+    - name: Setup MSYS2 (install needed packages)
       uses: msys2/setup-msys2@v2
-          
+      with:
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-ninja
+          mingw-w64-x86_64-pkg-config
+          mingw-w64-x86_64-zlib
+
+    - name: Configure (MSYS2 / Ninja)
+      shell: msys2 {0}
+      run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+
+    - name: Build (MSYS2 / Ninja)
+      shell: msys2 {0}
+      run: cmake --build build --parallel
+
+    - name: Test (MSYS2 / Ninja)
+      shell: msys2 {0}
+      run: |
+        cd build
+        ctest --output-on-failure
+
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cli-calculator-ubuntu
+        path: |
+          ${{github.workspace}}/build/src/calculator*
+          ${{github.workspace}}/build/src/divisors*
+        if-no-files-found: warn
