@@ -50,8 +50,10 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: cli-calculator-ubuntu
+        name: cli-calculator-windows
         path: |
           ${{github.workspace}}/build/src/calculator*
           ${{github.workspace}}/build/src/divisors*
+          ${{github.workspace}}/build/src/*.exe
+          ${{github.workspace}}/build/src/*.dll          
         if-no-files-found: warn
