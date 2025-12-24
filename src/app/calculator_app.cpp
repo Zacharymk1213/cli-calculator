@@ -21,14 +21,16 @@ CalculatorApp::executeCliAction(const CliParseResult &parseResult) {
     }
     return std::nullopt;
   }
-  return dispatchAction(*parseResult.action, parseResult.outputFormat);
+  return dispatchAction(*parseResult.action, parseResult.outputFormat,
+                        parseResult.useBigInt);
 }
 
 int CalculatorApp::dispatchAction(const CliAction &action,
-                                  OutputFormat format) {
+                                  OutputFormat format, bool useBigInt) {
   switch (action.type) {
   case CliActionType::Eval:
-    return runEval(action.params.empty() ? "" : action.params.front(), format);
+    return runEval(action.params.empty() ? "" : action.params.front(), format,
+                   nullptr, useBigInt);
   case CliActionType::SquareRoot:
     return runSquareRoot(action.params.empty() ? "" : action.params.front(),
                          format);

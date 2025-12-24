@@ -1,15 +1,19 @@
 #include "expression.hpp"
 #include "math_utils.hpp"
 #include <algorithm>
+#include <boost/multiprecision/cpp_int.hpp>
 #include <cctype>
 #include <cmath>
 #include <complex>
+#include <limits>
 #include <map>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace {
+using boost::multiprecision::cpp_int;
+
 bool isOperatorChar(char ch) {
   ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
   return ch == '+' || ch == '-' || ch == '*' || ch == 'x' || ch == ':' ||
@@ -113,6 +117,13 @@ struct Token {
     RightParen
   } type;
   double value{};
+  char op{};
+  std::string text;
+};
+
+struct BigToken {
+  enum class Type { Number, Operator, Variable, LeftParen, RightParen } type;
+  std::string number;
   char op{};
   std::string text;
 };
@@ -347,6 +358,254 @@ std::vector<Token> toRpn(const std::vector<Token> &tokens) {
 
   return output;
 }
+
+std::string parseIntegerToken(const std::string &expr, std::size_t &index) {
+  std::size_t start = index;
+  bool hasDigit = false;
+  while (index < expr.size()) {
+    char c = expr[index];
+    if (std::isdigit(static_cast<unsigned char>(c))) {
+      hasDigit = true;
+      ++index;
+    } else {
+      break;
+    }
+  }
+  if (!hasDigit) {
+    throw std::invalid_argument("Expected a digit in the integer.");
+  }
+  return expr.substr(start, index - start);
+}
+
+cpp_int parseBigInt(const std::string &text) {
+  if (text.empty()) {
+    throw std::invalid_argument("Empty integer literal.");
+  }
+  bool negative = false;
+  std::size_t index = 0;
+  if (text[0] == '-') {
+    negative = true;
+    index = 1;
+  }
+  if (index >= text.size()) {
+    throw std::invalid_argument("Invalid integer literal.");
+  }
+  cpp_int value = 0;
+  for (; index < text.size(); ++index) {
+    char c = text[index];
+    if (!std::isdigit(static_cast<unsigned char>(c))) {
+      throw std::invalid_argument("Invalid integer literal.");
+    }
+    value *= 10;
+    value += static_cast<unsigned int>(c - '0');
+  }
+  return negative ? -value : value;
+}
+
+cpp_int factorialOfBigInt(const cpp_int &operand) {
+  if (operand < 0) {
+    throw std::invalid_argument(
+        "Factorial is not defined for negative numbers.");
+  }
+  cpp_int result = 1;
+  for (cpp_int i = 2; i <= operand; ++i) {
+    result *= i;
+  }
+  return result;
+}
+
+cpp_int resolveBigIntVariable(const std::string &name, double value) {
+  double rounded = std::round(value);
+  if (!isApproximatelyZero(value - rounded)) {
+    throw std::invalid_argument("Variable '" + name +
+                                "' must be an integer in bigint mode.");
+  }
+  if (rounded < static_cast<double>(std::numeric_limits<long long>::min()) ||
+      rounded > static_cast<double>(std::numeric_limits<long long>::max())) {
+    throw std::overflow_error("Variable '" + name +
+                              "' is out of range for bigint mode.");
+  }
+  return cpp_int(static_cast<long long>(rounded));
+}
+
+std::vector<BigToken> tokenizeExpressionBigInt(const std::string &expression) {
+  std::vector<BigToken> tokens;
+  std::size_t i = 0;
+  bool expectValue = true;
+
+  while (i < expression.size()) {
+    char c = expression[i];
+    if (std::isspace(static_cast<unsigned char>(c))) {
+      ++i;
+      continue;
+    }
+
+    if (expectValue) {
+      if (c == '(') {
+        tokens.push_back({BigToken::Type::LeftParen, "", 0, ""});
+        ++i;
+        continue;
+      }
+
+      int sign = 1;
+      bool sawUnarySign = false;
+      if (c == '+' || c == '-') {
+        sawUnarySign = true;
+        sign = (c == '-') ? -1 : 1;
+        ++i;
+        while (i < expression.size() &&
+               std::isspace(static_cast<unsigned char>(expression[i]))) {
+          ++i;
+        }
+        if (i >= expression.size()) {
+          throw std::invalid_argument(
+              "Expression cannot end with a unary operator.");
+        }
+        c = expression[i];
+        if (c == '(') {
+          if (sign == -1) {
+            tokens.push_back({BigToken::Type::Number, "0", 0, ""});
+            tokens.push_back({BigToken::Type::Operator, "", '-', ""});
+          }
+          expectValue = true;
+          continue;
+        }
+      } else {
+        sign = 1;
+      }
+
+      if (std::isdigit(static_cast<unsigned char>(c))) {
+        std::string number = parseIntegerToken(expression, i);
+        if (sign == -1) {
+          number.insert(number.begin(), '-');
+        }
+        tokens.push_back({BigToken::Type::Number, number, 0, ""});
+        expectValue = false;
+        continue;
+      }
+
+      if (c == '.') {
+        throw std::invalid_argument(
+            "Bigint mode does not support decimal numbers.");
+      }
+
+      if (std::isalpha(static_cast<unsigned char>(c))) {
+        std::size_t start = i;
+        ++i;
+        while (i < expression.size() &&
+               (std::isalnum(static_cast<unsigned char>(expression[i])) ||
+                expression[i] == '_')) {
+          ++i;
+        }
+        std::string identifier = expression.substr(start, i - start);
+        std::string lowered = identifier;
+        std::transform(lowered.begin(), lowered.end(), lowered.begin(),
+                       [](unsigned char ch) {
+                         return static_cast<char>(std::tolower(ch));
+                       });
+
+        if (lowered == "sin" || lowered == "cos" || lowered == "log" ||
+            lowered == "tan" || lowered == "sqrt" || lowered == "exp" ||
+            lowered == "cot" || lowered == "asin" || lowered == "acos" ||
+            lowered == "atan" || lowered == "sinh") {
+          throw std::invalid_argument("Functions are not supported in bigint "
+                                      "mode: " +
+                                      identifier);
+        }
+
+        if (sawUnarySign && sign == -1) {
+          tokens.push_back({BigToken::Type::Number, "0", 0, ""});
+          tokens.push_back({BigToken::Type::Operator, "", '-', ""});
+        }
+        tokens.push_back({BigToken::Type::Variable, "", 0, lowered});
+        expectValue = false;
+        continue;
+      }
+
+      throw std::invalid_argument(
+          "Expected an integer or '(' in the expression.");
+    } else {
+      if (c == ')') {
+        tokens.push_back({BigToken::Type::RightParen, "", 0, ""});
+        ++i;
+        continue;
+      }
+
+      if (c == '!') {
+        tokens.push_back({BigToken::Type::Operator, "", '!', ""});
+        ++i;
+        continue;
+      }
+
+      if (isOperatorChar(c)) {
+        tokens.push_back(
+            {BigToken::Type::Operator, "", normalizeOperator(c), ""});
+        ++i;
+        expectValue = true;
+        continue;
+      }
+
+      throw std::invalid_argument(
+          "Expected an operator or ')' in the expression.");
+    }
+  }
+
+  if (expectValue) {
+    throw std::invalid_argument(
+        "Expression ended unexpectedly. Operand missing.");
+  }
+
+  return tokens;
+}
+
+std::vector<BigToken> toRpnBigInt(const std::vector<BigToken> &tokens) {
+  std::vector<BigToken> output;
+  std::vector<BigToken> stack;
+
+  for (const BigToken &token : tokens) {
+    switch (token.type) {
+    case BigToken::Type::Number:
+      output.push_back(token);
+      break;
+    case BigToken::Type::Variable:
+      output.push_back(token);
+      break;
+    case BigToken::Type::Operator:
+      while (!stack.empty() && stack.back().type == BigToken::Type::Operator &&
+             precedence(stack.back().op) >= precedence(token.op)) {
+        output.push_back(stack.back());
+        stack.pop_back();
+      }
+      stack.push_back(token);
+      break;
+    case BigToken::Type::LeftParen:
+      stack.push_back(token);
+      break;
+    case BigToken::Type::RightParen:
+      while (!stack.empty() &&
+             stack.back().type != BigToken::Type::LeftParen) {
+        output.push_back(stack.back());
+        stack.pop_back();
+      }
+      if (stack.empty() || stack.back().type != BigToken::Type::LeftParen) {
+        throw std::invalid_argument("Mismatched parentheses in expression.");
+      }
+      stack.pop_back();
+      break;
+    }
+  }
+
+  while (!stack.empty()) {
+    if (stack.back().type == BigToken::Type::LeftParen ||
+        stack.back().type == BigToken::Type::RightParen) {
+      throw std::invalid_argument("Mismatched parentheses in expression.");
+    }
+    output.push_back(stack.back());
+    stack.pop_back();
+  }
+
+  return output;
+}
 } // namespace
 
 double evaluateExpression(const std::string &expression,
@@ -428,4 +687,83 @@ double evaluateExpression(const std::string &expression,
   }
 
   return stack.back();
+}
+
+std::string evaluateExpressionBigInt(
+    const std::string &expression,
+    const std::map<std::string, double> &variables) {
+  using boost::multiprecision::cpp_int;
+
+  std::vector<BigToken> tokens = tokenizeExpressionBigInt(expression);
+  std::vector<BigToken> rpn = toRpnBigInt(tokens);
+  std::vector<cpp_int> stack;
+
+  for (const BigToken &token : rpn) {
+    switch (token.type) {
+    case BigToken::Type::Number:
+      stack.push_back(parseBigInt(token.number));
+      break;
+    case BigToken::Type::Operator:
+      if (token.op == '!') {
+        if (stack.empty()) {
+          throw std::invalid_argument("Factorial operator missing operand.");
+        }
+        cpp_int value = stack.back();
+        stack.back() = factorialOfBigInt(value);
+        break;
+      }
+      if (stack.size() < 2) {
+        throw std::invalid_argument(
+            "Invalid expression: insufficient operands.");
+      }
+      {
+        cpp_int rhs = stack.back();
+        stack.pop_back();
+        cpp_int lhs = stack.back();
+        stack.pop_back();
+        cpp_int result = 0;
+        switch (token.op) {
+        case '+':
+          result = lhs + rhs;
+          break;
+        case '-':
+          result = lhs - rhs;
+          break;
+        case '*':
+          result = lhs * rhs;
+          break;
+        case '/':
+          if (rhs == 0) {
+            throw std::runtime_error("Division by zero in expression.");
+          }
+          if (lhs % rhs != 0) {
+            throw std::domain_error(
+                "Division results in a non-integer value in bigint mode.");
+          }
+          result = lhs / rhs;
+          break;
+        default:
+          throw std::invalid_argument("Unknown operator in expression.");
+        }
+        stack.push_back(result);
+      }
+      break;
+    case BigToken::Type::Variable: {
+      auto found = variables.find(token.text);
+      if (found == variables.end()) {
+        throw std::invalid_argument("Unknown variable: " + token.text);
+      }
+      stack.push_back(resolveBigIntVariable(token.text, found->second));
+      break;
+    }
+    default:
+      break;
+    }
+  }
+
+  if (stack.size() != 1) {
+    throw std::invalid_argument("Invalid expression: leftover operands.");
+  }
+
+  return stack.back().convert_to<std::string>();
 }
