@@ -32,7 +32,7 @@ jobs:
           mingw-w64-x86_64-pkg-config
           mingw-w64-x86_64-zlib
           mingw-w64-x86_64-gcc-libs
-          mingw-w64-x86_64-boost	  
+          mingw-w64-x86_64-boost-libs	  
     - name: Configure (MSYS2 / Ninja)
       shell: msys2 {0}
       run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
@@ -68,6 +68,7 @@ jobs:
           ${{github.workspace}}/build/src/divisors*
           ${{github.workspace}}/build/src/libgcc_s_seh-1.dll
           ${{github.workspace}}/build/src/zlib1.dll
+          ${{github.workspace}}/build/src/libboost*.dll
           ${{github.workspace}}/build/src/libstdc++-6.dll
           ${{github.workspace}}/build/src/libwinpthread-1.dll
         if-no-files-found: warn
