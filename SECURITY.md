@@ -5,6 +5,7 @@ The project follows a rolling release model. Only the latest commit on the `main
 
 | Version | Supported |
 |---------|-----------|
+| Latest prebuilt binary from releases | Yes (Recommended) |
 | Latest `main` branch | Yes |
 | Older commits/releases | No |
 

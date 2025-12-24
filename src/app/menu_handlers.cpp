@@ -559,12 +559,27 @@ void runUnitConversionMenu() {
 } // namespace
 
 void handleArithmetic() {
+  std::cout << '\n'
+            << UNDERLINE << MAGENTA << "--- Expression Evaluator ---" << RESET
+            << '\n';
+  std::cout << YELLOW << " 1) " << RESET << CYAN << "Standard (double)"
+            << RESET << '\n';
+  std::cout << YELLOW << " 2) " << RESET << CYAN << "Bigint (integers only)"
+            << RESET << '\n';
+  std::cout << YELLOW << " 0) " << RESET << CYAN << "Back" << RESET << '\n';
+
+  int modeChoice = readMenuChoice(0, 2);
+  if (modeChoice == 0) {
+    return;
+  }
+  bool useBigInt = modeChoice == 2;
+
   while (true) {
-    std::cout << '\n'
-              << UNDERLINE << MAGENTA << "--- Expression Evaluator ---" << RESET
-              << '\n';
-    std::string expression =
-        readLine("Enter an expression (type 'back' to return): ");
+    std::string prompt = useBigInt
+                             ? "Enter an integer expression (type 'back' to "
+                               "return): "
+                             : "Enter an expression (type 'back' to return): ";
+    std::string expression = readLine(prompt);
     std::string lowered = trim(expression);
     std::transform(
         lowered.begin(), lowered.end(), lowered.begin(),
@@ -573,9 +588,15 @@ void handleArithmetic() {
       return;
     }
     try {
-      double result =
-          evaluateExpression(expression, globalVariableStore().variables());
-      std::cout << GREEN << "Result: " << RESET << result << '\n';
+      if (useBigInt) {
+        std::string result = evaluateExpressionBigInt(
+            expression, globalVariableStore().variables());
+        std::cout << GREEN << "Result: " << RESET << result << '\n';
+      } else {
+        double result =
+            evaluateExpression(expression, globalVariableStore().variables());
+        std::cout << GREEN << "Result: " << RESET << result << '\n';
+      }
     } catch (const std::exception &ex) {
       std::cout << RED << "Error: " << RESET << ex.what() << '\n';
     }
@@ -622,6 +643,7 @@ void handleDivisors() {
     long long value = readInteger("Enter an integer (0 allowed): ");
     if (value == 0) {
       std::cout << RED << "Zero has infinitely many divisors." << RESET << '\n';
+      continue;
     } else {
       try {
         std::vector<long long> divisors = calculateDivisors(value);

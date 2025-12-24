@@ -17,8 +17,6 @@ enum class CliActionType {
   PrimeFactorization,
   SolveLinear,
   SolveQuadratic,
-  SolveCubic,
-  SolveLinearSystem,
   MatrixAdd,
   MatrixSubtract,
   MatrixMultiply,
@@ -44,6 +42,7 @@ struct CliParseResult {
   bool colorsEnabled = true;
   OutputFormat outputFormat = OutputFormat::Text;
   bool sawNonColorArgument = false;
+  bool useBigInt = false;
   std::optional<CliAction> action;
 };
 
@@ -55,6 +54,6 @@ struct CliParseError {
 
 class CliParser {
 public:
-  static std::pair<CliParseResult, std::optional<CliParseError>>
-  parse(int argc, char **argv);
+  std::pair<CliParseResult, std::optional<CliParseError>>
+  parse(int argc, char **argv) const;
 };

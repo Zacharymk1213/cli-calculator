@@ -156,13 +156,6 @@ std::string normalizeBatchFlag(const std::string &flag) {
   if (stripped == "solve-quadratic" || stripped == "solvequadratic") {
     return "--solve-quadratic";
   }
-  if (stripped == "solve-cubic" || stripped == "solvecubic") {
-    return "--solve-cubic";
-  }
-  if (stripped == "solve-linear-system" || stripped == "solvelinearsystem" ||
-      stripped == "solve-system" || stripped == "solvesystem") {
-    return "--solve-linear-system";
-  }
   if (stripped == "matrix-add" || stripped == "matrixadd") {
     return "--matrix-add";
   }
@@ -398,37 +391,6 @@ int dispatchBatchCommand(const std::vector<std::string> &tokens,
     }
     state.lastResult.reset();
     return runSolveQuadratic(tokens[1], tokens[2], tokens[3], outputFormat);
-  }
-  if (flag == "--solve-cubic") {
-    if (tokens.size() < 5) {
-      if (outputFormat == OutputFormat::Text) {
-        std::cerr << RED << "Error: missing arguments after --solve-cubic"
-                  << RESET << '\n';
-      } else {
-        printStructuredError(std::cerr, outputFormat, "solve-cubic",
-                             "missing arguments after --solve-cubic");
-      }
-      return 2;
-    }
-    state.lastResult.reset();
-    return runSolveCubic(tokens[1], tokens[2], tokens[3], tokens[4],
-                         outputFormat);
-  }
-  if (flag == "--solve-linear-system") {
-    if (tokens.size() < 7) {
-      if (outputFormat == OutputFormat::Text) {
-        std::cerr << RED
-                  << "Error: missing arguments after --solve-linear-system"
-                  << RESET << '\n';
-      } else {
-        printStructuredError(std::cerr, outputFormat, "solve-linear-system",
-                             "missing arguments after --solve-linear-system");
-      }
-      return 2;
-    }
-    state.lastResult.reset();
-    return runSolveLinearSystem(tokens[1], tokens[2], tokens[3], tokens[4],
-                                tokens[5], tokens[6], outputFormat);
   }
   if (flag == "--matrix-add") {
     if (tokens.size() < 3) {
