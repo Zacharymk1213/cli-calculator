@@ -276,30 +276,53 @@ void openUrl(const std::string &url) {
 } // namespace
 
 int runEval(const std::string &expression, OutputFormat outputFormat,
-            std::optional<double> *lastResult) {
+            std::optional<double> *lastResult, bool useBigInt) {
   if (lastResult) {
     lastResult->reset();
   }
   try {
-    double result =
-        evaluateExpression(expression, globalVariableStore().variables());
-    if (outputFormat == OutputFormat::Text) {
-      std::cout << GREEN << "Result: " << RESET << result << '\n';
+    if (useBigInt) {
+      std::string result =
+          evaluateExpressionBigInt(expression,
+                                   globalVariableStore().variables());
+      if (outputFormat == OutputFormat::Text) {
+        std::cout << GREEN << "Result: " << RESET << result << '\n';
+      } else {
+        std::ostringstream jsonPayload;
+        jsonPayload << "\"expression\":\"" << jsonEscape(expression)
+                    << "\",\"result\":" << result;
+        std::ostringstream xmlPayload;
+        xmlPayload << "<expression>" << xmlEscape(expression)
+                   << "</expression><result>" << result << "</result>";
+        std::ostringstream yamlPayload;
+        yamlPayload << "expression: " << yamlEscape(expression) << '\n'
+                    << "result: " << result;
+        printStructuredSuccess(std::cout, outputFormat, "eval",
+                               jsonPayload.str(), xmlPayload.str(),
+                               yamlPayload.str());
+      }
     } else {
-      std::ostringstream jsonPayload;
-      jsonPayload << "\"expression\":\"" << jsonEscape(expression)
-                  << "\",\"result\":" << result;
-      std::ostringstream xmlPayload;
-      xmlPayload << "<expression>" << xmlEscape(expression)
-                 << "</expression><result>" << result << "</result>";
-      std::ostringstream yamlPayload;
-      yamlPayload << "expression: " << yamlEscape(expression) << '\n'
-                  << "result: " << result;
-      printStructuredSuccess(std::cout, outputFormat, "eval", jsonPayload.str(),
-                             xmlPayload.str(), yamlPayload.str());
-    }
-    if (lastResult) {
-      *lastResult = result;
+      double result =
+          evaluateExpression(expression, globalVariableStore().variables());
+      if (outputFormat == OutputFormat::Text) {
+        std::cout << GREEN << "Result: " << RESET << result << '\n';
+      } else {
+        std::ostringstream jsonPayload;
+        jsonPayload << "\"expression\":\"" << jsonEscape(expression)
+                    << "\",\"result\":" << result;
+        std::ostringstream xmlPayload;
+        xmlPayload << "<expression>" << xmlEscape(expression)
+                   << "</expression><result>" << result << "</result>";
+        std::ostringstream yamlPayload;
+        yamlPayload << "expression: " << yamlEscape(expression) << '\n'
+                    << "result: " << result;
+        printStructuredSuccess(std::cout, outputFormat, "eval",
+                               jsonPayload.str(), xmlPayload.str(),
+                               yamlPayload.str());
+      }
+      if (lastResult) {
+        *lastResult = result;
+      }
     }
     return 0;
   } catch (const std::exception &ex) {
@@ -1772,6 +1795,8 @@ int runHelp(OutputFormat outputFormat) {
       "Options:\n"
       "  -e, --eval <expression>       Evaluate the given mathematical "
       "expression.\n"
+      "  --bigint                      Evaluate expressions using "
+      "arbitrary-precision integers (integers only).\n"
       "  --repl                        Start the interactive REPL with "
       "arrow-key history + CLI flag support.\n"
       "  -sqrt, --square-root <value>  Calculate the square root of the given "
@@ -1816,6 +1841,8 @@ int runHelp(OutputFormat outputFormat) {
     std::cout << "Options:\n";
     std::cout << "  -e, --eval <expression>       Evaluate the given "
                  "mathematical expression.\n";
+    std::cout << "  --bigint                      Evaluate expressions using "
+                 "arbitrary-precision integers (integers only).\n";
     std::cout << "  --repl                        Start the interactive REPL "
                  "with arrow-key history + CLI flag support.\n";
     std::cout << "  -sqrt, --square-root <value>  Calculate the square root of "

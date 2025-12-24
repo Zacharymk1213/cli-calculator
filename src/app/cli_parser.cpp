@@ -61,6 +61,11 @@ CliParser::parse(int argc, char **argv) const {
       result.colorsEnabled = false;
       continue;
     }
+    if (arg == "--bigint") {
+      result.useBigInt = true;
+      result.sawNonColorArgument = true;
+      continue;
+    }
     if (arg == "--output") {
       result.sawNonColorArgument = true;
       if (i + 1 >= argc) {
@@ -84,6 +89,9 @@ CliParser::parse(int argc, char **argv) const {
   for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
     if (isNoColorFlag(arg)) {
+      continue;
+    }
+    if (arg == "--bigint") {
       continue;
     }
     if (arg == "--output") {
