@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y cmake build-essential
+          sudo apt install -y cmake build-essential libboost-all-dev
 
       - name: Configure
         run: |
