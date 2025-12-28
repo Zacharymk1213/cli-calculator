@@ -6,7 +6,10 @@ set(CORE_SOURCES
     core/divisors_lib.cpp
     core/prime_factors.cpp
     core/equations.cpp
-    core/expression.cpp
+    core/expression_eval.cpp
+    core/expression_bigint.cpp
+    core/expression_rpn.cpp
+    core/expression_tokenize.cpp
     core/variables.cpp
     core/input.cpp
     core/math_utils.cpp
