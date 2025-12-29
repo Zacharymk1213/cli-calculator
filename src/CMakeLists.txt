@@ -7,7 +7,10 @@ set(CORE_SOURCES
     core/divisors_lib.cpp
     core/prime_factors.cpp
     core/equations.cpp
-    core/expression.cpp
+    core/expression_eval.cpp
+    core/expression_bigint.cpp
+    core/expression_rpn.cpp
+    core/expression_tokenize.cpp
     core/variables.cpp
     core/input.cpp
     core/math_utils.cpp
@@ -20,7 +23,6 @@ set(CORE_SOURCES
 )
 
 set(APP_SOURCES
-    main.cpp
     app/calculator_app.cpp
     app/cli_batch.cpp
     app/cli_commands.cpp
@@ -29,6 +31,10 @@ set(APP_SOURCES
     app/cli_numeric.cpp
     app/cli_output.cpp
     app/menu_handlers.cpp
+)
+
+set(APP_MAIN
+    main.cpp
 )
 
 set(TOOLS_SOURCES
@@ -47,11 +53,16 @@ target_include_directories(calculator_core PUBLIC ${COMMON_INCLUDES})
 target_compile_definitions(calculator_core PUBLIC CLI_CALCULATOR_VERSION="${PROJECT_VERSION}")
 target_link_libraries(calculator_core PUBLIC ZLIB::ZLIB Boost::boost)
 
+add_library(calculator_app ${APP_SOURCES})
+target_include_directories(calculator_app PUBLIC ${COMMON_INCLUDES})
+target_link_libraries(calculator_app PUBLIC calculator_core)
+target_compile_definitions(calculator_app PUBLIC CLI_CALCULATOR_VERSION="${PROJECT_VERSION}")
+
 add_executable(divisors ${TOOLS_SOURCES})
-add_executable(calculator ${APP_SOURCES})
+add_executable(calculator ${APP_MAIN})
 
 target_link_libraries(divisors PRIVATE calculator_core)
-target_link_libraries(calculator PRIVATE calculator_core)
+target_link_libraries(calculator PRIVATE calculator_app)
 target_compile_definitions(divisors PRIVATE CLI_CALCULATOR_VERSION="${PROJECT_VERSION}")
 target_compile_definitions(calculator PRIVATE CLI_CALCULATOR_VERSION="${PROJECT_VERSION}")
 
@@ -62,6 +73,46 @@ install(TARGETS calculator
 if(MSVC)
   target_compile_options(divisors PRIVATE /W4)
   target_compile_options(calculator PRIVATE /W4)
+endif()
+
+option(BUILD_GUI "Build Qt GUI" ON)
+set(QT_MAJOR_VERSION "" CACHE STRING "Force Qt major version (5 or 6)")
+if(BUILD_GUI)
+  if(QT_MAJOR_VERSION STREQUAL "6")
+    find_package(Qt6 COMPONENTS Widgets REQUIRED)
+    set(QT_WIDGETS_LIB Qt6::Widgets)
+  elseif(QT_MAJOR_VERSION STREQUAL "5")
+    find_package(Qt5 COMPONENTS Widgets REQUIRED)
+    set(QT_WIDGETS_LIB Qt5::Widgets)
+  else()
+    find_package(Qt6 COMPONENTS Widgets QUIET)
+    if(Qt6_FOUND)
+      set(QT_WIDGETS_LIB Qt6::Widgets)
+    else()
+      find_package(Qt5 COMPONENTS Widgets QUIET)
+      if(Qt5_FOUND)
+        set(QT_WIDGETS_LIB Qt5::Widgets)
+      else()
+        message(WARNING "Qt Widgets not found, skipping calculator_gui target.")
+        set(BUILD_GUI OFF)
+      endif()
+    endif()
+  endif()
+endif()
+
+if(BUILD_GUI)
+  set(CMAKE_AUTOMOC ON)
+  add_executable(calculator_gui
+      gui/main.cpp
+      gui/matrix_editor.cpp
+      gui/main_window.cpp
+  )
+  target_include_directories(calculator_gui PRIVATE ${COMMON_INCLUDES})
+  target_link_libraries(calculator_gui PRIVATE calculator_app ${QT_WIDGETS_LIB})
+  target_compile_definitions(calculator_gui PRIVATE CLI_CALCULATOR_VERSION="${PROJECT_VERSION}")
+  install(TARGETS calculator_gui
+      RUNTIME DESTINATION bin
+  )
 endif()
 option(USE_ZLIB "Enable ZLIB support" ON)
 

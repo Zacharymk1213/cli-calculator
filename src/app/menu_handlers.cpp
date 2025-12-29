@@ -725,9 +725,14 @@ void handleEquations() {
               << RESET << '\n';
     std::cout << YELLOW << " 2) " << RESET << CYAN
               << "Quadratic (a * x^2 + b * x + c = 0)" << RESET << '\n';
+    std::cout << YELLOW << " 3) " << RESET << CYAN
+              << "Cubic (a * x^3 + b * x^2 + c * x + d = 0)" << RESET << '\n';
+    std::cout << YELLOW << " 4) " << RESET << CYAN
+              << "Linear system 2x2 (a1*x + b1*y = c1, a2*x + b2*y = c2)"
+              << RESET << '\n';
     std::cout << YELLOW << " 0) " << RESET << CYAN << "Back" << RESET << '\n';
 
-    int choice = readMenuChoice(0, 2);
+    int choice = readMenuChoice(0, 4);
     switch (choice) {
     case 0:
       return;
@@ -742,6 +747,24 @@ void handleEquations() {
       double b = readDouble("Enter coefficient b: ");
       double c = readDouble("Enter coefficient c: ");
       solveQuadraticEquation(a, b, c);
+      break;
+    }
+    case 3: {
+      double a = readDouble("Enter coefficient a: ");
+      double b = readDouble("Enter coefficient b: ");
+      double c = readDouble("Enter coefficient c: ");
+      double d = readDouble("Enter coefficient d: ");
+      solveCubicEquation(a, b, c, d);
+      break;
+    }
+    case 4: {
+      double a1 = readDouble("Enter coefficient a1: ");
+      double b1 = readDouble("Enter coefficient b1: ");
+      double c1 = readDouble("Enter coefficient c1: ");
+      double a2 = readDouble("Enter coefficient a2: ");
+      double b2 = readDouble("Enter coefficient b2: ");
+      double c2 = readDouble("Enter coefficient c2: ");
+      solveLinearSystem2x2(a1, b1, c1, a2, b2, c2);
       break;
     }
     default:
