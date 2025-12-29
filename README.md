@@ -17,6 +17,13 @@ A full-featured CLI calculator supporting:
 * Prime factorization with variable persistence
 * CLI-only actions without launching the menu
 
+### calculator_gui
+
+Qt-based GUI that wraps the same calculation engine with tabs for expressions,
+numbers, conversions, equations, matrices, graphs, statistics, variables, notes,
+and an in-app terminal. Supports split-view tab layouts and Markdown notes with
+LaTeX-style symbols.
+
 ---
 
 ## Quickstart
@@ -51,6 +58,7 @@ calculator --help
 * CMake >= 3.10
 * C++17-compatible compiler (GCC / Clang / MSVC)
 * zlib (PNG graph export)
+* Qt5 or Qt6 Widgets (optional GUI)
 
 ---
 
@@ -61,6 +69,13 @@ cmake -S . -B build
 cmake --build build --config Release
 ```
 
+### Build with GUI
+
+```bash
+cmake -S . -B build -DBUILD_GUI=ON
+cmake --build build --config Release
+```
+
 ---
 
 ## Run
@@ -68,6 +83,13 @@ cmake --build build --config Release
 ```bash
 ./build/src/calculator
 ./build/src/divisors
+./build/src/calculator_gui
+```
+
+### Snap GUI
+
+```bash
+cli-calculator.gui
 ```
 
 ---
@@ -81,10 +103,19 @@ cmake --build build --config Release
 | Equations   | Linear & quadratic (complex roots)           |
 | Matrices    | Add / subtract / multiply                    |
 | Statistics  | Mean, median, variance, stddev, percentiles  |
-| Graphs      | ASCII preview + PNG export                   |
+| Graphs      | ASCII preview (CLI) + PNG export             |
 | Variables   | Persisted via `vars.toml`                    |
 
 ---
+
+## GUI Highlights
+
+* Split view: open any two tabs side-by-side.
+* Notes: Markdown editor with live preview, code block copy buttons, and file
+  operations (new/open/save/save as).
+* Graphs: generate PNGs from values or CSV and save to any location.
+* Terminal: run CLI calculator commands or shell commands from the workspace
+  directory.
 
 ## CLI Flags (Grouped)
 [Detailed Documentation](https://github.com/Benedek553/cli-calculator/wiki/CLI-Flags-Documentation)

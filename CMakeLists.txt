@@ -104,3 +104,7 @@ endif()
 install(TARGETS divisors calculator
         RUNTIME DESTINATION bin)
 
+install(TARGETS calculator_gui
+        RUNTIME DESTINATION bin)
+
+
