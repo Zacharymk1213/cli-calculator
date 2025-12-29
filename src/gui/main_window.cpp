@@ -250,6 +250,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runEval(expression, format, nullptr, useBigInt);
       });
     });
+    connect(exprInput_, &QLineEdit::returnPressed, runButton, &QPushButton::click);
   }
   registerTab("Expressions", expressionTab);
 
@@ -312,6 +313,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runSquareRoot(value, format, nullptr);
       });
     });
+    connect(sqrtInput_, &QLineEdit::returnPressed, sqrtButton, &QPushButton::click);
 
     connect(divButton, &QPushButton::clicked, this, [this]() {
       const auto value = divisorsInput_->text().toStdString();
@@ -319,6 +321,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runDivisors(value, format);
       });
     });
+    connect(divisorsInput_, &QLineEdit::returnPressed, divButton, &QPushButton::click);
 
     connect(primeButton, &QPushButton::clicked, this, [this]() {
       const auto value = primeFactorsInput_->text().toStdString();
@@ -326,6 +329,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runPrimeFactorization(value, format);
       });
     });
+    connect(primeFactorsInput_, &QLineEdit::returnPressed, primeButton, &QPushButton::click);
   }
   registerTab("Numbers", numberTab);
 
@@ -427,6 +431,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runConvert(fromBase, toBase, value, format);
       });
     });
+    connect(baseValueInput_, &QLineEdit::returnPressed, baseButton, &QPushButton::click);
 
     connect(unitButton, &QPushButton::clicked, this, [this]() {
       const auto category = unitCategoryInput_->currentData().toString().toStdString();
@@ -437,6 +442,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runUnitConvert(category, fromUnit, toUnit, value, format);
       });
     });
+    connect(unitValueInput_, &QLineEdit::returnPressed, unitButton, &QPushButton::click);
   }
   registerTab("Conversions", convertTab);
 
@@ -489,6 +495,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runSolveLinear(aValue, bValue, format);
       });
     });
+    connect(linearAInput_, &QLineEdit::returnPressed, linearButton, &QPushButton::click);
+    connect(linearBInput_, &QLineEdit::returnPressed, linearButton, &QPushButton::click);
 
     connect(quadButton, &QPushButton::clicked, this, [this]() {
       const auto aValue = quadraticAInput_->text().toStdString();
@@ -498,6 +506,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runSolveQuadratic(aValue, bValue, cValue, format);
       });
     });
+    connect(quadraticAInput_, &QLineEdit::returnPressed, quadButton, &QPushButton::click);
+    connect(quadraticBInput_, &QLineEdit::returnPressed, quadButton, &QPushButton::click);
+    connect(quadraticCInput_, &QLineEdit::returnPressed, quadButton, &QPushButton::click);
   }
   registerTab("Equations", equationsTab);
 
@@ -582,6 +593,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runMatrixMultiply(matrixA, matrixB, format);
       });
     });
+    connect(matrixAInput_, &QLineEdit::returnPressed, addButton, &QPushButton::click);
+    connect(matrixBInput_, &QLineEdit::returnPressed, addButton, &QPushButton::click);
   }
   registerTab("Matrices", matrixTab);
 
@@ -716,6 +729,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       }
       showGraphPreview("Graph CSV", outputPath);
     });
+    connect(graphValuesInput_, &QLineEdit::returnPressed, valuesButton, &QPushButton::click);
+    connect(graphCsvPathInput_, &QLineEdit::returnPressed, csvButton, &QPushButton::click);
+    connect(graphCsvColumnInput_, &QLineEdit::returnPressed, csvButton, &QPushButton::click);
 
     connect(saveGraphButton, &QPushButton::clicked, this, [this]() {
       if (currentGraphPath_.isEmpty()) {
@@ -763,6 +779,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runStatistics(tokens, format);
       });
     });
+    connect(statsInput_, &QLineEdit::returnPressed, statsButton, &QPushButton::click);
   }
   registerTab("Statistics", statsTab);
 
@@ -824,6 +841,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runSetVariable(name, value, format);
       });
     });
+    connect(varNameInput_, &QLineEdit::returnPressed, setButton, &QPushButton::click);
+    connect(varValueInput_, &QLineEdit::returnPressed, setButton, &QPushButton::click);
 
     connect(unsetButton, &QPushButton::clicked, this, [this]() {
       const auto name = unsetVarInput_->text().toStdString();
@@ -831,6 +850,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         return runUnsetVariable(name, format);
       });
     });
+    connect(unsetVarInput_, &QLineEdit::returnPressed, unsetButton, &QPushButton::click);
   }
   registerTab("Variables", varsTab);
 
