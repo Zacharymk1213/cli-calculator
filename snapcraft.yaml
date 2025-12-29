@@ -1,0 +1,80 @@
+name: cli-calculator
+base: core22
+version: "2.0.1"
+summary: Simple CLI calculator with GUI
+title: CLI Calculator
+website: https://benedek553.github.io/cli-calculator/
+source-code: https://github.com/Benedek553/cli-calculator
+issues: https://github.com/Benedek553/cli-calculator/issues
+icon: icon.png
+description: |
+  cli-calculator provides a full-featured command-line calculator with
+  expression evaluation, conversions, equations, matrices, and statistics.
+  It also ships an optional Qt GUI that wraps the same calculation engine.
+license: Apache-2.0
+grade: stable
+confinement: strict
+
+apps:
+  cli-calculator:
+    command: usr/bin/calculator
+    plugs:
+      - home
+    environment:
+      LC_ALL: C
+      LANG: C
+  divisors:
+    command: usr/bin/divisors
+    plugs:
+      - home
+    environment:
+      LC_ALL: C
+      LANG: C
+  gui:
+    command: usr/bin/calculator_gui
+    desktop: snap/gui/cli-calculator.desktop
+    extensions:
+      - kde-neon
+    plugs:
+      - desktop
+      - desktop-legacy
+      - wayland
+      - x11
+      - opengl
+      - home
+    environment:
+      LC_ALL: C
+      LANG: C
+
+parts:
+  cli-calculator:
+    plugin: cmake
+    source: .
+    cmake-parameters:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DBUILD_GUI=ON
+      - -DCMAKE_INSTALL_PREFIX=/usr
+      - -DQT_MAJOR_VERSION=5
+    build-packages:
+      - g++
+      - cmake
+      - make
+      - pkg-config
+      - libboost-dev
+      - zlib1g-dev
+      - qtbase5-dev
+    stage-packages:
+      - locales
+      - zlib1g
+      - libstdc++6
+      - libgcc-s1
+      - libqt5widgets5
+      - libqt5gui5
+      - libqt5core5a
+      - libqt5dbus5
+      - libqt5network5
+      - libqt5svg5
+      - qtwayland5
+      - libx11-6
+      - libxkbcommon0
+      - libgl1
