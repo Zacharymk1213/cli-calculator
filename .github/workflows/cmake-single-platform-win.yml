@@ -39,6 +39,9 @@ jobs:
           mingw-w64-x86_64-md4c
           mingw-w64-x86_64-double-conversion
           mingw-w64-x86_64-icu
+          mingw-w64-x86_64-pcre2
+          mingw-w64-x86_64-libpng
+          mingw-w64-x86_64-zstd
           
     - name: Configure (MSYS2 / Ninja)
       shell: msys2 {0}
@@ -95,6 +98,16 @@ jobs:
           ${{github.workspace}}/build/src/libmd4c.dll
           ${{github.workspace}}/build/src/libdouble-conversion.dll
           ${{github.workspace}}/build/src/libicuin78.dll
-
+          ${{github.workspace}}/build/src/libicudt78.dll
+          ${{github.workspace}}/build/src/libicuio78.dll
+          ${{github.workspace}}/build/src/libicutest78.dll
+          ${{github.workspace}}/build/src/libicutu78.dll
+          ${{github.workspace}}/build/src/libicuuc78.dll
+          ${{github.workspace}}/build/src/libpcre2-16-0.dll
+          ${{github.workspace}}/build/src/libpcre2-32-0.dll
+          ${{github.workspace}}/build/src/libpcre2-8-0.dll
+          ${{github.workspace}}/build/src/libpcre2-posix-3.dll
+          ${{github.workspace}}/build/src/libpng16-16.dll
+          ${{github.workspace}}/build/src/libzstd.dll
         if-no-files-found: warn
 
