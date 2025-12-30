@@ -45,7 +45,8 @@ jobs:
             mingw-w64-x86_64-libiconv
             mingw-w64-x86_64-md4c
             mingw-w64-x86_64-gcc-libs
-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-angleproject
       - name: Configure CMake
         shell: msys2 {0}
         run: |
