@@ -30,7 +30,7 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: |
         echo "CMAKE_PREFIX_PATH=$(brew --prefix qt@5)" >> $GITHUB_ENV
-        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBOOST_ROOT=$(brew --prefix boost)
+        cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DBOOST_ROOT=$(brew --prefix boost) -DQT_MAJOR_VERSION=5
 
     - name: Build
       # Build your program with the given configuration
