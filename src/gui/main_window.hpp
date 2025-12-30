@@ -30,6 +30,12 @@ struct TabEntry {
   QWidget *widget = nullptr;
 };
 
+struct NotesCodeBlock {
+  QString code;
+  QString language;
+  QString output;
+};
+
 class MainWindow : public QMainWindow {
 public:
   explicit MainWindow(QWidget *parent = nullptr);
@@ -96,7 +102,7 @@ private:
   QPushButton *notesSwitchButton_ = nullptr;
   QString notesRunOutput_;
   QSyntaxHighlighter *notesHighlighter_ = nullptr;
-  std::vector<QString> notesCodeBlocks_;
+  std::vector<NotesCodeBlock> notesCodeBlocks_;
   std::vector<std::pair<int, int>> notesCodeRanges_;
   std::vector<std::pair<int, int>> notesPythonRanges_;
   bool notesRefreshInProgress_ = false;
