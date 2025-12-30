@@ -41,6 +41,15 @@ jobs:
             mingw-w64-x86_64-libiconv
             mingw-w64-x86_64-md4c
             mingw-w64-x86_64-angleproject
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-gcc-libs
+            mingw-w64-x86_64-boost-libs	  
+            mingw-w64-x86_64-double-conversion
+            mingw-w64-x86_64-libpng
+            mingw-w64-x86_64-zstd
+            mingw-w64-x86_64-glib2
+            mingw-w64-x86_64-gettext-runtime
 
       - name: Configure CMake
         shell: msys2 {0}
