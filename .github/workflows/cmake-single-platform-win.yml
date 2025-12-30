@@ -68,7 +68,7 @@ jobs:
       run: |
         mkdir -p build/src
         shopt -s nullglob
-        files=(/mingw64/bin/*.dll /mingw64/bin/*.exe)
+        files=(/mingw64/bin/*.dll /mingw64/bin/*.exe /mingw64/share/qt5/plugins/platforms/*.dll)
         if [ "${#files[@]}" -gt 0 ]; then
           cp -v "${files[@]}" build/src/
         else
@@ -125,5 +125,10 @@ jobs:
           ${{github.workspace}}/build/src/libintl-8.dll
           ${{github.workspace}}/build/src/libbz2-1.dll
           ${{github.workspace}}/build/src/libiconv-2.dll
+          ${{github.workspace}}/build/src/qdirect2d.dll
+          ${{github.workspace}}/build/src/qminimal.dll
+          ${{github.workspace}}/build/src/qoffscreen.dll
+          ${{github.workspace}}/build/src/qwindows.dll
+
         if-no-files-found: warn
 
