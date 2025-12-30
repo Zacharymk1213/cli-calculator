@@ -106,7 +106,7 @@ install(TARGETS divisors calculator
 
 if(TARGET calculator_gui)
   install(TARGETS calculator_gui
-          RUNTIME DESTINATION bin)
+          BUNDLE DESTINATION .)
 endif()
 
 

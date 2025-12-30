@@ -111,7 +111,7 @@ if(BUILD_GUI)
   target_link_libraries(calculator_gui PRIVATE calculator_app ${QT_WIDGETS_LIB})
   target_compile_definitions(calculator_gui PRIVATE CLI_CALCULATOR_VERSION="${PROJECT_VERSION}")
   install(TARGETS calculator_gui
-      RUNTIME DESTINATION bin
+      BUNDLE DESTINATION .
   )
 endif()
 option(USE_ZLIB "Enable ZLIB support" ON)
