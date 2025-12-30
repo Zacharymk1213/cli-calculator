@@ -45,7 +45,7 @@ jobs:
     - name: Package app
       run: |
         export PATH=$(brew --prefix qt@5)/bin:$PATH
-        macdeployqt ${{github.workspace}}/build/src/calculator_gui.app -dmg
+        macdeployqt ${{github.workspace}}/build/src/calculator_gui.app -dmg -codesign="-"
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
