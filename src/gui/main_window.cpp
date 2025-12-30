@@ -38,10 +38,17 @@
 #include <QSplitter>
 #include <QUrl>
 #include <QTextBrowser>
+#include <QSyntaxHighlighter>
+#include <QTextCharFormat>
+#include <QTextCursor>
 #include <QSignalBlocker>
 #include <QProcess>
+#include <QProcessEnvironment>
 #include <QRegularExpression>
 #include <QTextDocument>
+#include <QKeyEvent>
+#include <QEvent>
+#include <QTextEdit>
 
 #include <iostream>
 #include <sstream>
@@ -138,6 +145,345 @@ QString wrapCodeBlockHtml(int index, const QString &code) {
       .arg(index)
       .arg(escaped);
 }
+
+std::vector<QString> extractPythonBlocks(const QString &markdown) {
+  std::vector<QString> blocks;
+  const QRegularExpression fenceRe(
+      "```\\s*(python|py)\\b[^\\n]*\\n([\\s\\S]*?)```",
+      QRegularExpression::CaseInsensitiveOption);
+  QRegularExpressionMatchIterator it = fenceRe.globalMatch(markdown);
+  while (it.hasNext()) {
+    QRegularExpressionMatch match = it.next();
+    const QString code = match.captured(2);
+    if (!code.trimmed().isEmpty()) {
+      blocks.push_back(code);
+    }
+  }
+  return blocks;
+}
+
+bool isPythonNotesFile(const QString &path) {
+  return path.endsWith(".py", Qt::CaseInsensitive);
+}
+
+std::vector<std::pair<int, int>> extractCodeRanges(const QString &markdown) {
+  std::vector<std::pair<int, int>> ranges;
+  const QRegularExpression fenceRe("```[^\\n]*\\n([\\s\\S]*?)```");
+  QRegularExpressionMatchIterator it = fenceRe.globalMatch(markdown);
+  while (it.hasNext()) {
+    QRegularExpressionMatch match = it.next();
+    const int start = match.capturedStart(1);
+    const int end = match.capturedEnd(1);
+    if (start >= 0 && end >= start) {
+      ranges.emplace_back(start, end);
+    }
+  }
+  return ranges;
+}
+
+std::vector<std::pair<int, int>> extractPythonRanges(const QString &markdown) {
+  std::vector<std::pair<int, int>> ranges;
+  const QRegularExpression fenceRe(
+      "```\\s*(python|py)\\b[^\\n]*\\n([\\s\\S]*?)```",
+      QRegularExpression::CaseInsensitiveOption);
+  QRegularExpressionMatchIterator it = fenceRe.globalMatch(markdown);
+  while (it.hasNext()) {
+    QRegularExpressionMatch match = it.next();
+    const int start = match.capturedStart(2);
+    const int end = match.capturedEnd(2);
+    if (start >= 0 && end >= start) {
+      ranges.emplace_back(start, end);
+    }
+  }
+  return ranges;
+}
+
+QString makePythonNotesPath() {
+  const QString sessionNumber = QString::number(QDateTime::currentSecsSinceEpoch());
+  return QDir::currentPath() + "/cli_calc_notes_" + sessionNumber + ".py";
+}
+
+class PythonSyntaxHighlighter : public QSyntaxHighlighter {
+public:
+  explicit PythonSyntaxHighlighter(QTextDocument *parent,
+                                   std::function<bool(int)> allowHighlight)
+      : QSyntaxHighlighter(parent),
+        allowHighlight_(std::move(allowHighlight)) {
+    QTextCharFormat keywordFormat;
+    keywordFormat.setForeground(QColor(0, 70, 140));
+    keywordFormat.setFontWeight(QFont::Bold);
+    const QStringList keywords = {
+        "and",   "as",     "assert", "break", "class", "continue", "def",
+        "del",   "elif",   "else",   "except","False", "finally",  "for",
+        "from",  "global", "if",     "import","in",    "is",       "lambda",
+        "None",  "nonlocal","not",   "or",    "pass",  "raise",    "return",
+        "True",  "try",    "while",  "with",  "yield"};
+    for (const auto &kw : keywords) {
+      rules_.push_back({QRegularExpression(QString("\\b%1\\b").arg(kw)), keywordFormat});
+    }
+
+    QTextCharFormat stringFormat;
+    stringFormat.setForeground(QColor(150, 80, 20));
+    rules_.push_back({QRegularExpression(R"('([^'\\]|\\.)*')"), stringFormat});
+    rules_.push_back({QRegularExpression(R"("([^"\\]|\\.)*")"), stringFormat});
+
+    QTextCharFormat numberFormat;
+    numberFormat.setForeground(QColor(120, 0, 120));
+    rules_.push_back({QRegularExpression(R"(\b\d+(\.\d+)?\b)"), numberFormat});
+
+    commentFormat_.setForeground(QColor(110, 110, 110));
+    commentFormat_.setFontItalic(true);
+    commentRegex_ = QRegularExpression(R"(#.*$)");
+  }
+
+protected:
+  void highlightBlock(const QString &text) override {
+    if (allowHighlight_) {
+      const int blockStart = currentBlock().position();
+      if (!allowHighlight_(blockStart)) {
+        return;
+      }
+    }
+    for (const auto &rule : rules_) {
+      QRegularExpressionMatchIterator it = rule.regex.globalMatch(text);
+      while (it.hasNext()) {
+        QRegularExpressionMatch match = it.next();
+        setFormat(match.capturedStart(), match.capturedLength(), rule.format);
+      }
+    }
+    QRegularExpressionMatch commentMatch = commentRegex_.match(text);
+    if (commentMatch.hasMatch()) {
+      setFormat(commentMatch.capturedStart(), commentMatch.capturedLength(), commentFormat_);
+    }
+  }
+
+private:
+  struct HighlightRule {
+    QRegularExpression regex;
+    QTextCharFormat format;
+  };
+  std::vector<HighlightRule> rules_;
+  QRegularExpression commentRegex_;
+  QTextCharFormat commentFormat_;
+  std::function<bool(int)> allowHighlight_;
+};
+
+class BracketPairer : public QObject {
+public:
+  explicit BracketPairer(QPlainTextEdit *editor,
+                         std::function<bool(int)> allowPairing)
+      : QObject(editor),
+        editor_(editor),
+        allowPairing_(std::move(allowPairing)) {}
+
+protected:
+  bool eventFilter(QObject *obj, QEvent *event) override {
+    if (obj != editor_ || event->type() != QEvent::KeyPress) {
+      return QObject::eventFilter(obj, event);
+    }
+    auto *keyEvent = static_cast<QKeyEvent *>(event);
+    const QString text = keyEvent->text();
+    if (text.isEmpty() || !editor_) {
+      return QObject::eventFilter(obj, event);
+    }
+    const int cursorPos = editor_->textCursor().position();
+    if (allowPairing_ && !allowPairing_(cursorPos)) {
+      return QObject::eventFilter(obj, event);
+    }
+    if (text == "(" || text == "[" || text == "{") {
+      const QChar open = text[0];
+      const QChar close = (open == '(') ? ')' : (open == '[' ? ']' : '}');
+      QTextCursor cursor = editor_->textCursor();
+      cursor.beginEditBlock();
+      cursor.insertText(QString(open) + close);
+      cursor.movePosition(QTextCursor::Left);
+      cursor.endEditBlock();
+      editor_->setTextCursor(cursor);
+      return true;
+    }
+    if (keyEvent->key() == Qt::Key_Backspace) {
+      QTextCursor cursor = editor_->textCursor();
+      if (!cursor.hasSelection()) {
+        const int pos = cursor.position();
+        const QString text = editor_->toPlainText();
+        if (pos > 0 && pos < text.size()) {
+          if (allowPairing_ && !(allowPairing_(pos) || allowPairing_(pos - 1))) {
+            return QObject::eventFilter(obj, event);
+          }
+          const QChar prev = text.at(pos - 1);
+          const QChar next = text.at(pos);
+          if ((prev == '(' && next == ')') ||
+              (prev == '[' && next == ']') ||
+              (prev == '{' && next == '}')) {
+            cursor.beginEditBlock();
+            cursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor, 1);
+            cursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, 1);
+            cursor.removeSelectedText();
+            cursor.endEditBlock();
+            editor_->setTextCursor(cursor);
+            return true;
+          }
+        }
+      }
+    }
+    return QObject::eventFilter(obj, event);
+  }
+
+private:
+  QPlainTextEdit *editor_ = nullptr;
+  std::function<bool(int)> allowPairing_;
+};
+
+class BracketMatchHighlighter : public QObject {
+public:
+  explicit BracketMatchHighlighter(QPlainTextEdit *editor,
+                                   std::function<bool(int)> allowHighlight)
+      : QObject(editor),
+        editor_(editor),
+        allowHighlight_(std::move(allowHighlight)) {
+    if (editor_) {
+      connect(editor_, &QPlainTextEdit::cursorPositionChanged, this,
+              &BracketMatchHighlighter::updateHighlight);
+    }
+  }
+
+private:
+  static bool isOpenBracket(QChar ch) {
+    return ch == '(' || ch == '[' || ch == '{';
+  }
+
+  static bool isCloseBracket(QChar ch) {
+    return ch == ')' || ch == ']' || ch == '}';
+  }
+
+  static QChar matchingBracket(QChar ch) {
+    switch (ch.unicode()) {
+      case '(':
+        return ')';
+      case ')':
+        return '(';
+      case '[':
+        return ']';
+      case ']':
+        return '[';
+      case '{':
+        return '}';
+      case '}':
+        return '{';
+      default:
+        return QChar();
+    }
+  }
+
+  int findMatchForward(const QString &text, int pos) const {
+    const QChar open = text.at(pos);
+    const QChar close = matchingBracket(open);
+    int depth = 0;
+    for (int i = pos + 1; i < text.size(); ++i) {
+      const QChar ch = text.at(i);
+      if (ch == open) {
+        ++depth;
+      } else if (ch == close) {
+        if (depth == 0) {
+          return i;
+        }
+        --depth;
+      }
+    }
+    return -1;
+  }
+
+  int findMatchBackward(const QString &text, int pos) const {
+    const QChar close = text.at(pos);
+    const QChar open = matchingBracket(close);
+    int depth = 0;
+    for (int i = pos - 1; i >= 0; --i) {
+      const QChar ch = text.at(i);
+      if (ch == close) {
+        ++depth;
+      } else if (ch == open) {
+        if (depth == 0) {
+          return i;
+        }
+        --depth;
+      }
+    }
+    return -1;
+  }
+
+  void updateHighlight() {
+    if (!editor_) {
+      return;
+    }
+    QList<QTextEdit::ExtraSelection> selections;
+    const QString text = editor_->toPlainText();
+    if (text.isEmpty()) {
+      editor_->setExtraSelections(selections);
+      return;
+    }
+
+    QTextCursor cursor = editor_->textCursor();
+    int pos = cursor.position();
+    int bracketPos = -1;
+    if (pos >= 0 && pos < text.size() && (isOpenBracket(text.at(pos)) ||
+                                          isCloseBracket(text.at(pos)))) {
+      bracketPos = pos;
+    } else if (pos > 0 && (isOpenBracket(text.at(pos - 1)) ||
+                           isCloseBracket(text.at(pos - 1)))) {
+      bracketPos = pos - 1;
+    }
+
+    if (bracketPos == -1) {
+      editor_->setExtraSelections(selections);
+      return;
+    }
+    if (allowHighlight_ && !allowHighlight_(bracketPos)) {
+      editor_->setExtraSelections(selections);
+      return;
+    }
+
+    const QChar bracket = text.at(bracketPos);
+    int matchPos = -1;
+    if (isOpenBracket(bracket)) {
+      matchPos = findMatchForward(text, bracketPos);
+    } else if (isCloseBracket(bracket)) {
+      matchPos = findMatchBackward(text, bracketPos);
+    }
+    if (matchPos == -1) {
+      editor_->setExtraSelections(selections);
+      return;
+    }
+    if (allowHighlight_ && !allowHighlight_(matchPos)) {
+      editor_->setExtraSelections(selections);
+      return;
+    }
+
+    QTextCharFormat format;
+    format.setForeground(QColor(180, 0, 0));
+    format.setBackground(QColor(255, 220, 220));
+
+    QTextEdit::ExtraSelection first;
+    QTextCursor firstCursor(editor_->document());
+    firstCursor.setPosition(bracketPos);
+    firstCursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, 1);
+    first.cursor = firstCursor;
+    first.format = format;
+    selections.append(first);
+
+    QTextEdit::ExtraSelection second;
+    QTextCursor secondCursor(editor_->document());
+    secondCursor.setPosition(matchPos);
+    secondCursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, 1);
+    second.cursor = secondCursor;
+    second.format = format;
+    selections.append(second);
+
+    editor_->setExtraSelections(selections);
+  }
+
+  QPlainTextEdit *editor_ = nullptr;
+  std::function<bool(int)> allowHighlight_;
+};
 } // namespace
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
@@ -183,6 +529,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   auto *toggleNotesEditorAction = settingsMenu->addAction("Toggle Notes Editor");
   toggleNotesEditorAction->setCheckable(true);
   toggleNotesEditorAction->setChecked(true);
+  notesTogglePreviewAction_ = settingsMenu->addAction("Toggle Notes Preview");
+  notesTogglePreviewAction_->setCheckable(true);
+  notesTogglePreviewAction_->setChecked(true);
 
   auto *aboutAction = helpMenu->addAction("About");
   auto *contributeAction = helpMenu->addAction("Contribute");
@@ -240,8 +589,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     auto *buttonRow = new QHBoxLayout();
     buttonRow->addStretch();
     buttonRow->addWidget(runButton);
+    exprHistory_ = new QPlainTextEdit();
+    exprHistory_->setReadOnly(true);
+    exprHistory_->setPlaceholderText("Expression history...");
+    auto *historyLayout = new QVBoxLayout();
+    historyLayout->addWidget(exprHistory_);
     tabLayout->addLayout(formLayout);
     tabLayout->addLayout(buttonRow);
+    tabLayout->addWidget(wrapSection("History", historyLayout));
+    tabLayout->addStretch();
 
     connect(runButton, &QPushButton::clicked, this, [this]() {
       const auto expression = exprInput_->text().toStdString();
@@ -249,6 +605,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       runAndShow("Expression", [expression, useBigInt](OutputFormat format) {
         return runEval(expression, format, nullptr, useBigInt);
       });
+      if (exprHistory_) {
+        const QString outputText = output_ ? output_->toPlainText().trimmed()
+                                           : QString();
+        QString entry = QString(">> %1").arg(exprInput_->text().trimmed());
+        if (!outputText.isEmpty()) {
+          entry += "\n" + outputText;
+        }
+        exprHistory_->appendPlainText(entry);
+        exprHistory_->appendPlainText("");
+      }
     });
     connect(exprInput_, &QLineEdit::returnPressed, runButton, &QPushButton::click);
   }
@@ -937,11 +1303,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     auto *saveButton = new QPushButton("Save");
     auto *saveAsButton = new QPushButton("Save As");
     auto *copyButton = new QPushButton("Copy");
+    notesRunButton_ = new QPushButton("Run");
+    notesRunButton_->setEnabled(false);
+    notesSwitchButton_ = new QPushButton("Switch to Python");
     headerLayout->addWidget(newButton);
     headerLayout->addWidget(openButton);
     headerLayout->addWidget(saveButton);
     headerLayout->addWidget(saveAsButton);
     headerLayout->addWidget(copyButton);
+    headerLayout->addWidget(notesRunButton_);
+    headerLayout->addWidget(notesSwitchButton_);
     headerLayout->addStretch();
     tabLayout->addLayout(headerLayout);
 
@@ -957,6 +1328,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     notesSplitter_->setStretchFactor(1, 1);
     tabLayout->addWidget(notesSplitter_);
 
+    notesHighlighter_ = new PythonSyntaxHighlighter(
+        notesEditor_->document(), [this](int pos) {
+          return isNotesPythonPosition(pos);
+        });
+    auto *notesBracketPairer = new BracketPairer(
+        notesEditor_, [this](int pos) { return isNotesCodePosition(pos); });
+    notesEditor_->installEventFilter(notesBracketPairer);
+    auto *notesBracketHighlighter = new BracketMatchHighlighter(
+        notesEditor_, [this](int pos) { return isNotesCodePosition(pos); });
+    Q_UNUSED(notesBracketHighlighter);
+
     auto makeNotesPath = []() {
       const QString sessionNumber =
           QString::number(QDateTime::currentSecsSinceEpoch());
@@ -964,8 +1346,34 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     };
     notesPath_ = makeNotesPath();
 
-    connect(notesEditor_, &QPlainTextEdit::textChanged, this, [this]() {
+    auto refreshNotesActions = [this]() {
+      if (notesRefreshInProgress_) {
+        return;
+      }
+      notesRefreshInProgress_ = true;
+      updateNotesRanges();
+      if (notesSwitchButton_) {
+        const bool isPython = isPythonNotesFile(notesPath_);
+        notesSwitchButton_->setText(isPython ? "Switch to Markdown" : "Switch to Python");
+      }
+      if (notesRunButton_) {
+        const QString text = notesEditor_ ? notesEditor_->toPlainText() : QString();
+        const bool hasBlocks = !extractPythonBlocks(text).empty();
+        const bool hasPython = hasBlocks || (isPythonNotesFile(notesPath_) && !text.trimmed().isEmpty());
+        notesRunButton_->setEnabled(hasPython);
+        if (!hasPython && !notesRunOutput_.isEmpty()) {
+          notesRunOutput_.clear();
+        }
+      }
+      if (notesHighlighter_) {
+        notesHighlighter_->rehighlight();
+      }
+      notesRefreshInProgress_ = false;
+    };
+
+    connect(notesEditor_, &QPlainTextEdit::textChanged, this, [this, refreshNotesActions]() {
       updateNotesPreview();
+      refreshNotesActions();
     });
 
     connect(notesPreview_, &QTextBrowser::anchorClicked, this, [this](const QUrl &url) {
@@ -989,7 +1397,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       statusBar()->showMessage("Notes copied", 3000);
     };
 
-    auto openNotes = [this]() {
+    auto openNotes = [this, refreshNotesActions]() {
       QString path = QFileDialog::getOpenFileName(
           this, "Open Notes", QDir::currentPath(),
           "Markdown (*.md *.markdown);;Text Files (*.txt);;All Files (*)");
@@ -1003,6 +1411,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       }
       notesEditor_->setPlainText(QString::fromUtf8(file.readAll()));
       notesPath_ = path;
+      refreshNotesActions();
       updateNotesPreview();
       statusBar()->showMessage("Notes loaded", 3000);
     };
@@ -1038,9 +1447,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       statusBar()->showMessage("Notes saved", 3000);
     };
 
-    auto newNotes = [this, makeNotesPath]() {
+    auto newNotes = [this, makeNotesPath, refreshNotesActions]() {
       notesEditor_->clear();
       notesPath_ = makeNotesPath();
+      refreshNotesActions();
       updateNotesPreview();
       statusBar()->showMessage("New notes created", 3000);
     };
@@ -1056,6 +1466,92 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     connect(saveAsButton, &QPushButton::clicked, this, [saveNotesAs]() { saveNotesAs(); });
 
     connect(newButton, &QPushButton::clicked, this, [newNotes]() { newNotes(); });
+
+    if (notesSwitchButton_) {
+      connect(notesSwitchButton_, &QPushButton::clicked, this,
+              [this, makeNotesPath, refreshNotesActions]() {
+                const bool isPython = isPythonNotesFile(notesPath_);
+                notesEditor_->clear();
+                notesPath_ = isPython ? makeNotesPath() : makePythonNotesPath();
+                refreshNotesActions();
+                updateNotesPreview();
+                statusBar()->showMessage(
+                    isPython ? "Switched to Markdown notes" : "Switched to Python notes", 3000);
+              });
+    }
+
+    if (notesRunButton_) {
+      connect(notesRunButton_, &QPushButton::clicked, this, [this]() {
+        const QString text = notesEditor_->toPlainText();
+        const auto blocks = extractPythonBlocks(text);
+        QString code;
+        if (!blocks.empty()) {
+          for (size_t idx = 0; idx < blocks.size(); ++idx) {
+            if (idx != 0) {
+              code += "\n\n";
+            }
+            code += blocks[idx];
+          }
+        } else if (isPythonNotesFile(notesPath_)) {
+          code = text;
+        }
+        if (code.trimmed().isEmpty()) {
+          return;
+        }
+
+        auto runPython = [&code](const QString &program, QString *stdoutText,
+                                 QString *stderrText) -> bool {
+          QProcess process;
+          QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+          const QString snapRoot = QString::fromUtf8(qgetenv("SNAP"));
+          if (!snapRoot.isEmpty()) {
+            env.insert("PYTHONHOME", snapRoot + "/usr");
+            env.insert("PYTHONPATH", snapRoot + "/usr/lib/python3/dist-packages");
+          }
+          process.setProcessEnvironment(env);
+          process.start(program, QStringList() << "-");
+          if (!process.waitForStarted(2000)) {
+            return false;
+          }
+          process.write(code.toUtf8());
+          process.closeWriteChannel();
+          if (!process.waitForFinished(-1)) {
+            return false;
+          }
+          *stdoutText = QString::fromUtf8(process.readAllStandardOutput());
+          *stderrText = QString::fromUtf8(process.readAllStandardError());
+          return true;
+        };
+
+        QString stdoutText;
+        QString stderrText;
+        bool ok = false;
+        const QString snapRoot = QString::fromUtf8(qgetenv("SNAP"));
+        QStringList candidates;
+        if (!snapRoot.isEmpty()) {
+          candidates << (snapRoot + "/usr/bin/python3")
+                     << (snapRoot + "/usr/bin/python");
+        }
+        candidates << "python3" << "python";
+        for (const auto &candidate : candidates) {
+          ok = runPython(candidate, &stdoutText, &stderrText);
+          if (ok) {
+            break;
+          }
+        }
+
+        if (!ok) {
+          notesRunOutput_ =
+              "Failed to start Python interpreter (python3/python not found).";
+        } else {
+          const QString combined = (stdoutText + stderrText).trimmed();
+          notesRunOutput_ = combined.isEmpty() ? "No output." : combined;
+        }
+        updateNotesPreview();
+      });
+    }
+
+    refreshNotesActions();
 
     if (notesNewAction_) {
       connect(notesNewAction_, &QAction::triggered, this, [newNotes]() {
@@ -1172,6 +1668,22 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
       notesSplitter_->setStretchFactor(1, 1);
     }
   });
+
+  if (notesTogglePreviewAction_) {
+    connect(notesTogglePreviewAction_, &QAction::toggled, this, [this](bool enabled) {
+      if (!notesPreview_ || !notesSplitter_) {
+        return;
+      }
+      notesPreview_->setVisible(enabled);
+      if (enabled) {
+        notesSplitter_->setStretchFactor(0, 1);
+        notesSplitter_->setStretchFactor(1, 1);
+      } else {
+        notesSplitter_->setStretchFactor(0, 1);
+        notesSplitter_->setStretchFactor(1, 0);
+      }
+    });
+  }
 
   connect(clearOutputAction, &QAction::triggered, this, [this]() {
     output_->clear();
@@ -1379,8 +1891,74 @@ void MainWindow::updateNotesPreview() {
   if (!notesPreview_) {
     return;
   }
-  const QString html = buildNotesHtml(notesEditor_->toPlainText());
+  if (isPythonNotesFile(notesPath_)) {
+    const QString output = notesRunOutput_.toHtmlEscaped();
+    QString html = "<pre style=\"white-space:pre-wrap;\">";
+    html += output;
+    html += "</pre>";
+    notesPreview_->setHtml(html);
+    return;
+  }
+  QString html = buildNotesHtml(notesEditor_->toPlainText());
+  if (!notesRunOutput_.isEmpty()) {
+    const QString output = notesRunOutput_.toHtmlEscaped();
+    html += "<hr/>";
+    html += "<h3>Output</h3>";
+    html += "<pre style=\"white-space:pre-wrap;\">";
+    html += output;
+    html += "</pre>";
+  }
   notesPreview_->setHtml(html);
+}
+
+bool MainWindow::isNotesPythonMode() const {
+  return isPythonNotesFile(notesPath_);
+}
+
+bool MainWindow::isNotesCodePosition(int pos) const {
+  if (pos < 0) {
+    return false;
+  }
+  if (isNotesPythonMode()) {
+    return true;
+  }
+  for (const auto &range : notesCodeRanges_) {
+    if (pos >= range.first && pos < range.second) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool MainWindow::isNotesPythonPosition(int pos) const {
+  if (pos < 0) {
+    return false;
+  }
+  if (isNotesPythonMode()) {
+    return true;
+  }
+  for (const auto &range : notesPythonRanges_) {
+    if (pos >= range.first && pos < range.second) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void MainWindow::updateNotesRanges() {
+  if (!notesEditor_) {
+    notesCodeRanges_.clear();
+    notesPythonRanges_.clear();
+    return;
+  }
+  const QString text = notesEditor_->toPlainText();
+  if (isNotesPythonMode()) {
+    notesCodeRanges_.assign(1, {0, text.size()});
+    notesPythonRanges_.assign(1, {0, text.size()});
+    return;
+  }
+  notesCodeRanges_ = extractCodeRanges(text);
+  notesPythonRanges_ = extractPythonRanges(text);
 }
 
 void MainWindow::registerTab(const QString &title, QWidget *widget) {

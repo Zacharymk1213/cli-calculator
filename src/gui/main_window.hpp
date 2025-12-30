@@ -5,6 +5,7 @@
 #include <QMainWindow>
 
 #include <functional>
+#include <utility>
 #include <vector>
 
 class QCheckBox;
@@ -17,6 +18,8 @@ class QStackedWidget;
 class QTabWidget;
 class QToolButton;
 class QTextBrowser;
+class QPushButton;
+class QSyntaxHighlighter;
 class MatrixEditor;
 class QWidget;
 class QSplitter;
@@ -36,6 +39,7 @@ private:
 
   QLineEdit *exprInput_ = nullptr;
   QCheckBox *bigIntCheck_ = nullptr;
+  QPlainTextEdit *exprHistory_ = nullptr;
 
   QLineEdit *sqrtInput_ = nullptr;
   QLineEdit *divisorsInput_ = nullptr;
@@ -87,7 +91,15 @@ private:
   QAction *notesSaveAction_ = nullptr;
   QAction *notesSaveAsAction_ = nullptr;
   QAction *notesCopyAction_ = nullptr;
+  QAction *notesTogglePreviewAction_ = nullptr;
+  QPushButton *notesRunButton_ = nullptr;
+  QPushButton *notesSwitchButton_ = nullptr;
+  QString notesRunOutput_;
+  QSyntaxHighlighter *notesHighlighter_ = nullptr;
   std::vector<QString> notesCodeBlocks_;
+  std::vector<std::pair<int, int>> notesCodeRanges_;
+  std::vector<std::pair<int, int>> notesPythonRanges_;
+  bool notesRefreshInProgress_ = false;
   QPlainTextEdit *terminalOutput_ = nullptr;
   QLineEdit *terminalInput_ = nullptr;
   QString terminalCwd_;
@@ -116,6 +128,10 @@ private:
   void moveTabWidget(QWidget *widget, QStackedWidget *target);
   QString buildNotesHtml(const QString &markdown);
   void updateNotesPreview();
+  bool isNotesPythonMode() const;
+  bool isNotesCodePosition(int pos) const;
+  bool isNotesPythonPosition(int pos) const;
+  void updateNotesRanges();
 
   std::function<int(OutputFormat)> lastAction_;
   QString lastTitle_;

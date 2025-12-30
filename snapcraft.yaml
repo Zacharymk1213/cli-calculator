@@ -1,6 +1,6 @@
 name: cli-calculator
 base: core22
-version: "2.0.1"
+version: "2.1.0"
 summary: Simple CLI calculator with GUI
 title: CLI Calculator
 website: https://benedek553.github.io/cli-calculator/
@@ -68,6 +68,7 @@ parts:
       - zlib1g
       - libstdc++6
       - libgcc-s1
+      - python3
       - libqt5widgets5
       - libqt5gui5
       - libqt5core5a
