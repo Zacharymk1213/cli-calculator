@@ -102,7 +102,7 @@ endif()
 
 if(BUILD_GUI)
   set(CMAKE_AUTOMOC ON)
-  add_executable(calculator_gui
+  add_executable(calculator_gui MACOSX_BUNDLE
       gui/main.cpp
       gui/matrix_editor.cpp
       gui/main_window.cpp

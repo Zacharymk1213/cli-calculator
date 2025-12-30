@@ -42,6 +42,11 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{env.BUILD_TYPE}}
 
+    - name: Package app
+      run: |
+        export PATH=$(brew --prefix qt@5)/bin:$PATH
+        macdeployqt ${{github.workspace}}/build/src/calculator_gui.app -dmg
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -49,4 +54,5 @@ jobs:
         path: |
           ${{github.workspace}}/build/src/calculator*
           ${{github.workspace}}/build/src/divisors*
+          ${{github.workspace}}/build/src/calculator_gui.dmg
         if-no-files-found: warn
