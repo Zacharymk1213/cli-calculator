@@ -42,7 +42,9 @@ jobs:
           mingw-w64-x86_64-pcre2
           mingw-w64-x86_64-libpng
           mingw-w64-x86_64-zstd
-          
+          mingw-w64-x86_64-graphite2
+          mingw-w64-x86_64-freetype
+          mingw-w64-x86_64-glib2
     - name: Configure (MSYS2 / Ninja)
       shell: msys2 {0}
       run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
@@ -109,5 +111,9 @@ jobs:
           ${{github.workspace}}/build/src/libpcre2-posix-3.dll
           ${{github.workspace}}/build/src/libpng16-16.dll
           ${{github.workspace}}/build/src/libzstd.dll
+          ${{github.workspace}}/build/src/libgraphite2.dll
+          ${{github.workspace}}/build/src/libfreetype-6.dll
+          ${{github.workspace}}/build/src/libglib-2.0-0.dll
+
         if-no-files-found: warn
 
