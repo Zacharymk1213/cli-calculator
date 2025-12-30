@@ -48,6 +48,8 @@ jobs:
           mingw-w64-x86_64-brotli
           mingw-w64-x86_64-gettext-runtime
           mingw-w64-x86_64-bzip2
+          mingw-w64-x86_64-libiconv
+          
     - name: Configure (MSYS2 / Ninja)
       shell: msys2 {0}
       run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
@@ -122,6 +124,6 @@ jobs:
           ${{github.workspace}}/build/src/libbrotlienc.dll
           ${{github.workspace}}/build/src/libintl-8.dll
           ${{github.workspace}}/build/src/libbz2-1.dll
-
+          ${{github.workspace}}/build/src/libiconv-2.dll
         if-no-files-found: warn
 
