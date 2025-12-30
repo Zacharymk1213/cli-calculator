@@ -26,6 +26,7 @@ jobs:
             mingw-w64-x86_64-toolchain
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-boost
             mingw-w64-x86_64-qt5-base
             mingw-w64-x86_64-qt5-tools
             mingw-w64-x86_64-zlib
@@ -67,52 +68,6 @@ jobs:
           windeployqt --dir dist dist/calculator_gui.exe
           cp build/src/calculator.exe dist/
           cp build/src/divisors.exe dist/
-          cp build/src/libgcc_s_seh-1.dll dist/
-          cp build/src/zlib1.dll dist/
-          cp build/src/libboost*.dll dist/
-          cp build/src/libstdc++-6.dll dist/
-          cp build/src/libwinpthread-1.dll dist/
-          cp build/src/Qt5Concurrent.dll dist/
-          cp build/src/Qt5Core.dll dist/
-          cp build/src/Qt5DBus.dll dist/
-          cp build/src/Qt5Gui.dll dist/
-          cp build/src/Qt5Network.dll dist/
-          cp build/src/Qt5OpenGL.dll dist/
-          cp build/src/Qt5PrintSupport.dll dist/
-          cp build/src/Qt5Sql.dll dist/
-          cp build/src/Qt5Test.dll dist/
-          cp build/src/Qt5Widgets.dll dist/
-          cp build/src/Qt5Xml.dll dist/
-          cp build/src/libharfbuzz-0.dll dist/
-          cp build/src/libharfbuzz-gobject-0.dll dist/
-          cp build/src/libharfbuzz-subset-0.dll dist/
-          cp build/src/libmd4c.dll dist/
-          cp build/src/libdouble-conversion.dll dist/
-          cp build/src/libicuin78.dll dist/
-          cp build/src/libicudt78.dll dist/
-          cp build/src/libicuio78.dll dist/
-          cp build/src/libicutest78.dll dist/
-          cp build/src/libicutu78.dll dist/
-          cp build/src/libicuuc78.dll dist/
-          cp build/src/libpcre2-16-0.dll dist/
-          cp build/src/libpcre2-32-0.dll dist/
-          cp build/src/libpcre2-8-0.dll dist/
-          cp build/src/libpcre2-posix-3.dll dist/
-          cp build/src/libpng16-16.dll dist/
-          cp build/src/libzstd.dll dist/
-          cp build/src/libgraphite2.dll dist/
-          cp build/src/libfreetype-6.dll dist/
-          cp build/src/libglib-2.0-0.dll dist/
-          cp build/src/libbrotlicommon.dll dist/
-          cp build/src/libbrotlidec.dll dist/
-          cp build/src/libbrotlienc.dll dist/
-          cp build/src/libintl-8.dll dist/
-          cp build/src/libbz2-1.dll dist/
-          cp build/src/libiconv-2.dll dist/
-          cp build/src/qdirect2d.dll dist/
-          cp build/src/qminimal.dll dist/
-          cp build/src/qoffscreen.dll dist/
-          cp build/src/qwindows.dll dist/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
