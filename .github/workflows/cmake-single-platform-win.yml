@@ -45,6 +45,9 @@ jobs:
           mingw-w64-x86_64-graphite2
           mingw-w64-x86_64-freetype
           mingw-w64-x86_64-glib2
+          mingw-w64-x86_64-brotli
+          mingw-w64-x86_64-gettext-runtime
+          mingw-w64-x86_64-bzip2
     - name: Configure (MSYS2 / Ninja)
       shell: msys2 {0}
       run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
@@ -114,6 +117,11 @@ jobs:
           ${{github.workspace}}/build/src/libgraphite2.dll
           ${{github.workspace}}/build/src/libfreetype-6.dll
           ${{github.workspace}}/build/src/libglib-2.0-0.dll
+          ${{github.workspace}}/build/src/libbrotlicommon.dll
+          ${{github.workspace}}/build/src/libbrotlidec.dll
+          ${{github.workspace}}/build/src/libbrotlienc.dll
+          ${{github.workspace}}/build/src/libintl-8.dll
+          ${{github.workspace}}/build/src/libbz2-1.dll
 
         if-no-files-found: warn
 
