@@ -34,6 +34,7 @@ jobs:
           mingw-w64-x86_64-gcc-libs
           mingw-w64-x86_64-boost
           mingw-w64-x86_64-boost-libs	  
+          mingw-w64-x86_64-qt5-base
     - name: Configure (MSYS2 / Ninja)
       shell: msys2 {0}
       run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
@@ -72,5 +73,17 @@ jobs:
           ${{github.workspace}}/build/src/libboost*.dll
           ${{github.workspace}}/build/src/libstdc++-6.dll
           ${{github.workspace}}/build/src/libwinpthread-1.dll
+          ${{github.workspace}}/build/src/Qt5Concurrent.dll
+          ${{github.workspace}}/build/src/Qt5Core.dll
+          ${{github.workspace}}/build/src/Qt5DBus.dll
+          ${{github.workspace}}/build/src/Qt5Gui.dll
+          ${{github.workspace}}/build/src/Qt5Network.dll
+          ${{github.workspace}}/build/src/Qt5OpenGL.dll
+          ${{github.workspace}}/build/src/Qt5PrintSupport.dll
+          ${{github.workspace}}/build/src/Qt5Sql.dll
+          ${{github.workspace}}/build/src/Qt5Test.dll
+          ${{github.workspace}}/build/src/Qt5Widgets.dll
+          ${{github.workspace}}/build/src/Qt5Xml.dll
+
         if-no-files-found: warn
 
