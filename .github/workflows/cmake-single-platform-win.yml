@@ -47,6 +47,10 @@ jobs:
             mingw-w64-x86_64-gcc-libs
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-angleproject
+            mingw-w64-x86_64-double-conversion
+            mingw-w64-x86_64-libpng
+            mingw-w64-x86_64-gettext-runtime
+
       - name: Configure CMake
         shell: msys2 {0}
         run: |
@@ -81,7 +85,7 @@ jobs:
           cp /mingw64/bin/libstdc++-6.dll dist/
           cp /mingw64/bin/libwinpthread-1.dll dist/
           cp /mingw64/bin/zlib1.dll dist/
-
+          cp /mingw64/bin/*.dll dist/
           cp /mingw64/bin/libboost_*.dll dist/
 
       - name: Upload artifact
