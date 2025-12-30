@@ -76,6 +76,7 @@ jobs:
           mkdir -p dist
           cp build/src/calculator_gui.exe dist/
           windeployqt --dir dist dist/calculator_gui.exe
+          ls ${{github.workspace}}/build/src/*.dll
           cp ${{github.workspace}}/build/src/libgcc_s_seh-1.dll dist
           cp ${{github.workspace}}/build/src/zlib1.dll dist
           cp ${{github.workspace}}/build/src/libboost*.dll dist
