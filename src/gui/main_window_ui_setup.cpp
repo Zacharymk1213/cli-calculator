@@ -10,6 +10,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
   auto *clearOutputAction = fileMenu->addAction("Clear Output");
   auto *clearHistoryAction = fileMenu->addAction("Clear Expression History");
   fileMenu->addSeparator();
+  auto *evalModeMenu = fileMenu->addMenu("Evaluation Mode");
+  auto *evalModeGroup = new QActionGroup(this);
+  evalStandardAction_ = evalModeMenu->addAction("Standard (double)");
+  evalStandardAction_->setCheckable(true);
+  evalBigIntAction_ = evalModeMenu->addAction("BigInt (integers only)");
+  evalBigIntAction_->setCheckable(true);
+  evalBigDoubleAction_ = evalModeMenu->addAction("BigDouble (high-precision decimals)");
+  evalBigDoubleAction_->setCheckable(true);
+  evalModeGroup->addAction(evalStandardAction_);
+  evalModeGroup->addAction(evalBigIntAction_);
+  evalModeGroup->addAction(evalBigDoubleAction_);
+  evalStandardAction_->setChecked(true);
   notesNewAction_ = fileMenu->addAction("Notes: New");
   notesOpenAction_ = fileMenu->addAction("Notes: Open");
   notesSaveAction_ = fileMenu->addAction("Notes: Save");
@@ -118,9 +130,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
     connect(runButton, &QPushButton::clicked, this, [this]() {
       const auto expression = exprInput_->text().toStdString();
-      const bool useBigInt = bigIntCheck_->isChecked();
-      runAndShow("Expression", [expression, useBigInt](OutputFormat format) {
-        return runEval(expression, format, nullptr, useBigInt);
+      const bool useBigInt = (evalMode_ == EvalMode::BigInt);
+      const bool useBigDouble = (evalMode_ == EvalMode::BigDouble);
+      runAndShow("Expression",
+                 [expression, useBigInt, useBigDouble](OutputFormat format) {
+                   return runEval(expression, format, nullptr, useBigInt,
+                                  useBigDouble);
       });
       if (exprHistory_) {
         const QString outputText = output_ ? output_->toPlainText().trimmed()
@@ -131,6 +146,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         }
         exprHistory_->appendPlainText(entry);
         exprHistory_->appendPlainText("");
+      }
+    });
+    connect(bigIntCheck_, &QCheckBox::toggled, this, [this](bool checked) {
+      if (checked) {
+        setEvalMode(EvalMode::BigInt);
+      } else if (evalMode_ == EvalMode::BigInt) {
+        setEvalMode(EvalMode::Standard);
       }
     });
     connect(exprInput_, &QLineEdit::returnPressed, runButton, &QPushButton::click);
@@ -1223,8 +1245,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
 
   connect(exitAction, &QAction::triggered, this, [this]() { close(); });
 
+  connect(evalStandardAction_, &QAction::triggered, this,
+          [this]() { setEvalMode(EvalMode::Standard); });
+  connect(evalBigIntAction_, &QAction::triggered, this,
+          [this]() { setEvalMode(EvalMode::BigInt); });
+  connect(evalBigDoubleAction_, &QAction::triggered, this,
+          [this]() { setEvalMode(EvalMode::BigDouble); });
+
   connect(defaultBigIntAction, &QAction::toggled, this, [this](bool checked) {
-    bigIntCheck_->setChecked(checked);
+    if (checked) {
+      setEvalMode(EvalMode::BigInt);
+    } else if (evalMode_ == EvalMode::BigInt) {
+      setEvalMode(EvalMode::Standard);
+    }
   });
 
   connect(wrapOutputAction, &QAction::toggled, this, [this](bool checked) {

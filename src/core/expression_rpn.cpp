@@ -136,4 +136,70 @@ std::vector<BigToken> toRpnBigInt(const std::vector<BigToken> &tokens) {
 
   return output;
 }
+
+std::vector<BigFloatToken>
+toRpnBigDouble(const std::vector<BigFloatToken> &tokens) {
+  std::vector<BigFloatToken> output;
+  std::vector<BigFloatToken> stack;
+
+  for (const BigFloatToken &token : tokens) {
+    switch (token.type) {
+    case BigFloatToken::Type::Number:
+      output.push_back(token);
+      break;
+    case BigFloatToken::Type::Variable:
+      output.push_back(token);
+      break;
+    case BigFloatToken::Type::Function:
+      stack.push_back(token);
+      break;
+    case BigFloatToken::Type::Operator:
+      while (!stack.empty() &&
+             stack.back().type == BigFloatToken::Type::Operator) {
+        int stackPrecedence = precedence(stack.back().op);
+        int tokenPrecedence = precedence(token.op);
+        bool shouldPop = isRightAssociative(token.op)
+                             ? stackPrecedence > tokenPrecedence
+                             : stackPrecedence >= tokenPrecedence;
+        if (!shouldPop) {
+          break;
+        }
+        output.push_back(stack.back());
+        stack.pop_back();
+      }
+      stack.push_back(token);
+      break;
+    case BigFloatToken::Type::LeftParen:
+      stack.push_back(token);
+      break;
+    case BigFloatToken::Type::RightParen:
+      while (!stack.empty() &&
+             stack.back().type != BigFloatToken::Type::LeftParen) {
+        output.push_back(stack.back());
+        stack.pop_back();
+      }
+      if (stack.empty() ||
+          stack.back().type != BigFloatToken::Type::LeftParen) {
+        throw std::invalid_argument("Mismatched parentheses in expression.");
+      }
+      stack.pop_back();
+      if (!stack.empty() && stack.back().type == BigFloatToken::Type::Function) {
+        output.push_back(stack.back());
+        stack.pop_back();
+      }
+      break;
+    }
+  }
+
+  while (!stack.empty()) {
+    if (stack.back().type == BigFloatToken::Type::LeftParen ||
+        stack.back().type == BigFloatToken::Type::RightParen) {
+      throw std::invalid_argument("Mismatched parentheses in expression.");
+    }
+    output.push_back(stack.back());
+    stack.pop_back();
+  }
+
+  return output;
+}
 } // namespace expression_detail

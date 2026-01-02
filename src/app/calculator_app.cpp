@@ -16,21 +16,22 @@ CalculatorApp::executeCliAction(const CliParseResult &parseResult) {
     if (parseResult.outputFormat != OutputFormat::Text &&
         parseResult.sawNonColorArgument) {
       printStructuredError(std::cerr, parseResult.outputFormat, "output",
-      "structured output requires a CLI action flag");
+                           "structured output requires a CLI action flag");
       return 1;
     }
     return std::nullopt;
   }
   return dispatchAction(*parseResult.action, parseResult.outputFormat,
-                        parseResult.useBigInt);
+                        parseResult.useBigInt, parseResult.useBigDouble);
 }
 
 int CalculatorApp::dispatchAction(const CliAction &action,
-                                  OutputFormat format, bool useBigInt) {
+                                  OutputFormat format, bool useBigInt,
+                                  bool useBigDouble) {
   switch (action.type) {
   case CliActionType::Eval:
     return runEval(action.params.empty() ? "" : action.params.front(), format,
-                   nullptr, useBigInt);
+                   nullptr, useBigInt, useBigDouble);
   case CliActionType::SquareRoot:
     return runSquareRoot(action.params.empty() ? "" : action.params.front(),
                          format);

@@ -26,8 +26,10 @@
 #include <QLineEdit>
 #include <QMenu>
 #include <QMenuBar>
+#include <QActionGroup>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QSignalBlocker>
 #include <QFileDialog>
 #include <QFile>
 #include <QFileInfo>
@@ -330,6 +332,32 @@ void MainWindow::updateNotesRanges() {
   }
   notesCodeRanges_ = extractCodeRanges(text);
   notesPythonRanges_ = extractPythonRanges(text);
+}
+
+void MainWindow::setEvalMode(EvalMode mode) {
+  evalMode_ = mode;
+  if (evalStandardAction_) {
+    evalStandardAction_->setChecked(mode == EvalMode::Standard);
+  }
+  if (evalBigIntAction_) {
+    evalBigIntAction_->setChecked(mode == EvalMode::BigInt);
+  }
+  if (evalBigDoubleAction_) {
+    evalBigDoubleAction_->setChecked(mode == EvalMode::BigDouble);
+  }
+  if (bigIntCheck_) {
+    QSignalBlocker blocker(bigIntCheck_);
+    bigIntCheck_->setChecked(mode == EvalMode::BigInt);
+  }
+  if (statusBar()) {
+    QString label = "Standard (double)";
+    if (mode == EvalMode::BigInt) {
+      label = "BigInt (integers only)";
+    } else if (mode == EvalMode::BigDouble) {
+      label = "BigDouble (high-precision decimals)";
+    }
+    statusBar()->showMessage("Expression mode: " + label, 3000);
+  }
 }
 
 void MainWindow::registerTab(const QString &title, QWidget *widget) {

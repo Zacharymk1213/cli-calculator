@@ -566,19 +566,26 @@ void handleArithmetic() {
             << RESET << '\n';
   std::cout << YELLOW << " 2) " << RESET << CYAN << "Bigint (integers only)"
             << RESET << '\n';
+  std::cout << YELLOW << " 3) " << RESET << CYAN
+            << "Bigdouble (high-precision decimals)" << RESET << '\n';
   std::cout << YELLOW << " 0) " << RESET << CYAN << "Back" << RESET << '\n';
 
-  int modeChoice = readMenuChoice(0, 2);
+  int modeChoice = readMenuChoice(0, 3);
   if (modeChoice == 0) {
     return;
   }
   bool useBigInt = modeChoice == 2;
+  bool useBigDouble = modeChoice == 3;
 
   while (true) {
-    std::string prompt = useBigInt
-                             ? "Enter an integer expression (type 'back' to "
-                               "return): "
-                             : "Enter an expression (type 'back' to return): ";
+    std::string prompt;
+    if (useBigInt) {
+      prompt = "Enter an integer expression (type 'back' to return): ";
+    } else if (useBigDouble) {
+      prompt = "Enter a decimal expression (type 'back' to return): ";
+    } else {
+      prompt = "Enter an expression (type 'back' to return): ";
+    }
     std::string expression = readLine(prompt);
     std::string lowered = trim(expression);
     std::transform(
@@ -590,6 +597,10 @@ void handleArithmetic() {
     try {
       if (useBigInt) {
         std::string result = evaluateExpressionBigInt(
+            expression, globalVariableStore().variables());
+        std::cout << GREEN << "Result: " << RESET << result << '\n';
+      } else if (useBigDouble) {
+        std::string result = evaluateExpressionBigDouble(
             expression, globalVariableStore().variables());
         std::cout << GREEN << "Result: " << RESET << result << '\n';
       } else {

@@ -41,6 +41,8 @@ public:
   explicit MainWindow(QWidget *parent = nullptr);
 
 private:
+  enum class EvalMode { Standard, BigInt, BigDouble };
+
   QPlainTextEdit *output_ = nullptr;
 
   QLineEdit *exprInput_ = nullptr;
@@ -98,6 +100,9 @@ private:
   QAction *notesSaveAsAction_ = nullptr;
   QAction *notesCopyAction_ = nullptr;
   QAction *notesTogglePreviewAction_ = nullptr;
+  QAction *evalStandardAction_ = nullptr;
+  QAction *evalBigIntAction_ = nullptr;
+  QAction *evalBigDoubleAction_ = nullptr;
   QPushButton *notesRunButton_ = nullptr;
   QPushButton *notesSwitchButton_ = nullptr;
   QString notesRunOutput_;
@@ -118,6 +123,7 @@ private:
   QComboBox *splitLeftSelect_ = nullptr;
   QComboBox *splitRightSelect_ = nullptr;
   std::vector<TabEntry> tabEntries_;
+  EvalMode evalMode_ = EvalMode::Standard;
 
   void showResult(const QString &title, const QString &text, int exitCode);
   void runAndShow(const QString &title,
@@ -138,6 +144,7 @@ private:
   bool isNotesCodePosition(int pos) const;
   bool isNotesPythonPosition(int pos) const;
   void updateNotesRanges();
+  void setEvalMode(EvalMode mode);
 
   std::function<int(OutputFormat)> lastAction_;
   QString lastTitle_;

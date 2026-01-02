@@ -25,7 +25,7 @@
 #include <vector>
 
 #ifndef CLI_CALCULATOR_VERSION
-#define CLI_CALCULATOR_VERSION "1.7"
+#define CLI_CALCULATOR_VERSION "2.2.0"
 #endif
 
 namespace {
@@ -276,7 +276,8 @@ void openUrl(const std::string &url) {
 } // namespace
 
 int runEval(const std::string &expression, OutputFormat outputFormat,
-            std::optional<double> *lastResult, bool useBigInt) {
+            std::optional<double> *lastResult, bool useBigInt,
+            bool useBigDouble) {
   if (lastResult) {
     lastResult->reset();
   }
@@ -285,6 +286,26 @@ int runEval(const std::string &expression, OutputFormat outputFormat,
       std::string result =
           evaluateExpressionBigInt(expression,
                                    globalVariableStore().variables());
+      if (outputFormat == OutputFormat::Text) {
+        std::cout << GREEN << "Result: " << RESET << result << '\n';
+      } else {
+        std::ostringstream jsonPayload;
+        jsonPayload << "\"expression\":\"" << jsonEscape(expression)
+                    << "\",\"result\":" << result;
+        std::ostringstream xmlPayload;
+        xmlPayload << "<expression>" << xmlEscape(expression)
+                   << "</expression><result>" << result << "</result>";
+        std::ostringstream yamlPayload;
+        yamlPayload << "expression: " << yamlEscape(expression) << '\n'
+                    << "result: " << result;
+        printStructuredSuccess(std::cout, outputFormat, "eval",
+                               jsonPayload.str(), xmlPayload.str(),
+                               yamlPayload.str());
+      }
+    } else if (useBigDouble) {
+      std::string result =
+          evaluateExpressionBigDouble(expression,
+                                      globalVariableStore().variables());
       if (outputFormat == OutputFormat::Text) {
         std::cout << GREEN << "Result: " << RESET << result << '\n';
       } else {
@@ -1797,6 +1818,8 @@ int runHelp(OutputFormat outputFormat) {
       "expression.\n"
       "  --bigint                      Evaluate expressions using "
       "arbitrary-precision integers (integers only).\n"
+      "  --bigdouble                   Evaluate expressions using "
+      "arbitrary-precision decimals.\n"
       "  --repl                        Start the interactive REPL with "
       "arrow-key history + CLI flag support.\n"
       "  -sqrt, --square-root <value>  Calculate the square root of the given "
@@ -1843,6 +1866,8 @@ int runHelp(OutputFormat outputFormat) {
                  "mathematical expression.\n";
     std::cout << "  --bigint                      Evaluate expressions using "
                  "arbitrary-precision integers (integers only).\n";
+    std::cout << "  --bigdouble                   Evaluate expressions using "
+                 "arbitrary-precision decimals.\n";
     std::cout << "  --repl                        Start the interactive REPL "
                  "with arrow-key history + CLI flag support.\n";
     std::cout << "  -sqrt, --square-root <value>  Calculate the square root of "

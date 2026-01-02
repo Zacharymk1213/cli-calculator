@@ -9,6 +9,7 @@ set(CORE_SOURCES
     core/equations.cpp
     core/expression_eval.cpp
     core/expression_bigint.cpp
+    core/expression_bigdouble.cpp
     core/expression_rpn.cpp
     core/expression_tokenize.cpp
     core/variables.cpp

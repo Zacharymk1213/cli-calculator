@@ -8,3 +8,6 @@ double evaluateExpression(const std::string &expression,
 std::string evaluateExpressionBigInt(
     const std::string &expression,
     const std::map<std::string, double> &variables = {});
+std::string evaluateExpressionBigDouble(
+    const std::string &expression,
+    const std::map<std::string, double> &variables = {});
