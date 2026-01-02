@@ -45,6 +45,10 @@ cpp_int factorialOfBigInt(const cpp_int &operand) {
     throw std::invalid_argument(
         "Factorial is not defined for negative numbers.");
   }
+  if (operand > 10000) {
+    throw std::overflow_error(
+        "Factorial operand is too large for bigint mode.");
+  }
   cpp_int result = 1;
   for (cpp_int i = 2; i <= operand; ++i) {
     result *= i;
