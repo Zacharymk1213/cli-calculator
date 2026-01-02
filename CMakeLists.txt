@@ -104,7 +104,9 @@ endif()
 install(TARGETS divisors calculator
         RUNTIME DESTINATION bin)
 
-install(TARGETS calculator_gui
-        RUNTIME DESTINATION bin)
+if(TARGET calculator_gui)
+  install(TARGETS calculator_gui
+          BUNDLE DESTINATION .)
+endif()
 
 
