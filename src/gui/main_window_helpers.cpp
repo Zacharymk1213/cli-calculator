@@ -471,7 +471,7 @@ PythonRunResult runPythonSnippet(const QString &code) {
 
 QFont chooseFont(const QStringList &candidates, int pointSize,
                  QFont::Weight weight = QFont::Normal) {
-  const QStringList availableFamilies = QFontDatabase::families();
+  const QStringList availableFamilies = QFontDatabase().families();
   for (const auto &family : candidates) {
     if (availableFamilies.contains(family)) {
       QFont font(family);
