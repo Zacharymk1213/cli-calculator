@@ -20,7 +20,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libboost-all-dev qtbase5-dev
+        run: sudo apt-get install -y zlib1g-dev libboost-all-dev qtbase5-dev
       - name: Configure CMake
         run: |
           mkdir -p build
